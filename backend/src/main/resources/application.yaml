@@ -1,14 +1,11 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: inventory-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/inventorydb
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/inventorydb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
 
   jpa:
     hibernate:
@@ -16,3 +13,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}
+
+file:
+  upload-dir: uploads

@@ -1,0 +1,16 @@
+# Ignore Backend Build Files
+backend/target/
+backend/help/
+backend/.mvn/
+backend/uploads/
+
+# Ignore Frontend Dependency Junk
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Ignore System Files
+.idea/
+.vscode/
+*.log
+.DS_Store
