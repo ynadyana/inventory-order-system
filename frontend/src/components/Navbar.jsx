@@ -1,9 +1,21 @@
-import { ShoppingCart, Package } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext'; // <--- Import
+import { ShoppingCart, Package, LogOut, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
-  const { cart } = useCart(); // <--- Get cart data
+  const { cart } = useCart();
+  const navigate = useNavigate();
+  
+  // Check if user is logged in (Simple check)
+  const isLoggedIn = !!localStorage.getItem("token");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    alert("Logged out successfully");
+    navigate("/login");
+    window.location.reload(); // Quick refresh to update UI
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -15,6 +27,7 @@ const Navbar = () => {
             </div>
             <span className="text-xl font-bold tracking-tight">TechVault</span>
           </Link>
+
           <div className="flex items-center gap-6">
             <Link to="/cart" className="relative group">
               <ShoppingCart className="h-6 w-6 text-gray-500 group-hover:text-blue-600 transition" />
@@ -24,7 +37,22 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
-            <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-blue-600">Log in</Link>
+
+            {isLoggedIn ? (
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                <LogOut className="w-4 h-4" /> Logout
+              </button>
+            ) : (
+              <Link 
+                to="/login" 
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <User className="w-4 h-4" /> Log in
+              </Link>
+            )}
           </div>
         </div>
       </div>

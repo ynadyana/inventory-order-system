@@ -17,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration; // REQUIRED IMPORT
+import org.springframework.web.cors.CorsConfigurationSource; // REQUIRED IMPORT
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // REQUIRED IMPORT
+
+import java.util.Arrays; // REQUIRED IMPORT
 
 @Configuration
 @EnableWebSecurity
@@ -29,15 +34,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // 1. Activate the CORS configuration defined below
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // 1. Allow Login & Register
+                // 2. Public Access Rules
                 .requestMatchers("/api/auth/**").permitAll()
-                // 2. Allow viewing Images
                 .requestMatchers("/uploads/**").permitAll()
-                // 3. Allow EVERYONE to see the Product List (GET requests only)
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                // 4. Lock everything else
+                // 3. Authenticated Access Rules
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -47,7 +52,21 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // --- THESE ARE THE MISSING TOOLS WE NEED TO RESTORE ---
+    // --- BEAN TO MANAGE CORS POLICY ---
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Allow your React Frontend
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Allow the headers your app uses (including JWT Authorization)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
