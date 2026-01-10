@@ -1,6 +1,6 @@
 package io.github.ynadyana.inventory_backend.order.model;
 
-import io.github.ynadyana.inventory_backend.user.AppUser;
+import io.github.ynadyana.inventory_backend.user.AppUser; // Corrected Import
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -22,10 +22,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Which user placed the order?
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user;
+    private AppUser user; // Changed from User to AppUser
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
@@ -33,7 +32,7 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status; // PENDING, COMPLETED, CANCELLED
+    private OrderStatus status; 
 
     @CreationTimestamp
     private Instant createdAt;

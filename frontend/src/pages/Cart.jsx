@@ -1,11 +1,40 @@
 import { useCart } from '../context/CartContext';
 import { Trash2, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../lib/axios'; 
 
 const Cart = () => {
-  const { cart, removeFromCart, total } = useCart();
+  const { cart, removeFromCart, total, clearCart } = useCart();
+  const navigate = useNavigate();
 
   const getImageUrl = (path) => path ? `http://localhost:8080/${path}` : "https://via.placeholder.com/300";
+
+  const handleCheckout = async () => {
+    try {
+      const orderRequest = {
+        totalAmount: total,
+        items: cart.map(item => ({
+          productId: item.id,
+          quantity: item.quantity || 1,
+          price: item.price
+        }))
+      };
+
+      await api.post('/api/orders', orderRequest);
+      
+      alert("🎉 Order Placed Successfully!");
+      clearCart(); 
+      navigate('/'); 
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        alert("Please login as a Customer to place an order.");
+        navigate('/login');
+      } else {
+        alert("Something went wrong with the checkout.");
+      }
+    }
+  };
 
   if (cart.length === 0) return (
     <div className="text-center py-20">
@@ -30,7 +59,7 @@ const Cart = () => {
 
             <div className="text-right">
               <p className="font-bold text-lg">${item.price.toLocaleString()}</p>
-              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+              <p className="text-sm text-gray-500">Qty: {item.quantity || 1}</p>
             </div>
 
             <button 
@@ -47,7 +76,10 @@ const Cart = () => {
             <span className="text-gray-500">Total Amount:</span>
             <div className="text-3xl font-bold text-gray-900">${total.toLocaleString()}</div>
           </div>
-          <button className="flex items-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-blue-600 transition font-bold">
+          <button 
+            onClick={handleCheckout}
+            className="flex items-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-xl hover:bg-blue-600 transition font-bold"
+          >
             Proceed to Checkout <ArrowRight className="w-5 h-5" />
           </button>
         </div>
@@ -55,4 +87,5 @@ const Cart = () => {
     </div>
   );
 };
+
 export default Cart;

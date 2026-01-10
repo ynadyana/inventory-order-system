@@ -1,8 +1,18 @@
 package io.github.ynadyana.inventory_backend.order.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+import java.math.BigDecimal;
 import java.util.List;
 
-public record OrderRequest(
-    @NotEmpty List<OrderItemRequest> items
-) {}
+@Data
+public class OrderRequest {
+    private List<OrderItemRequest> items;
+    private BigDecimal totalAmount;
+
+    @Data
+    public static class OrderItemRequest {
+        private Long productId;
+        private Integer quantity;
+        private BigDecimal price;
+    }
+}

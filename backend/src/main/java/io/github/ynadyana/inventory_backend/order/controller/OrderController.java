@@ -3,7 +3,7 @@ package io.github.ynadyana.inventory_backend.order.controller;
 import io.github.ynadyana.inventory_backend.order.dto.OrderRequest;
 import io.github.ynadyana.inventory_backend.order.model.Order;
 import io.github.ynadyana.inventory_backend.order.service.OrderService;
-import io.github.ynadyana.inventory_backend.user.AppUser;
+import io.github.ynadyana.inventory_backend.user.AppUser; // Corrected Import
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +19,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER')") // Only customers place orders
+    @PreAuthorize("hasRole('CUSTOMER')") 
     public Order placeOrder(@AuthenticationPrincipal AppUser user, @RequestBody OrderRequest request) {
         return orderService.placeOrder(user, request);
     }
