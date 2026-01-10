@@ -1,7 +1,9 @@
 import { ShoppingCart } from 'lucide-react';
+import { useCart } from '../context/CartContext'; // <--- Import
 
 const ProductCard = ({ product }) => {
-  // Fix image URL to point to backend
+  const { addToCart } = useCart(); // <--- Get function
+  
   const getImageUrl = (path) => path ? `http://localhost:8080/${path}` : "https://via.placeholder.com/300";
 
   return (
@@ -18,7 +20,10 @@ const ProductCard = ({ product }) => {
         <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
           <span className="text-xl font-bold text-gray-900">${product.price.toLocaleString()}</span>
-          <button className="p-2 bg-gray-900 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <button 
+            onClick={() => addToCart(product)} // <--- CLICK HANDLER
+            className="p-2 bg-gray-900 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
             <ShoppingCart className="w-5 h-5" />
           </button>
         </div>
