@@ -1,20 +1,26 @@
-import { ShoppingCart, Package, LogOut, User, ClipboardList } from 'lucide-react'; // Added ClipboardList icon
-import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Package, LogOut, User, ClipboardList } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const { cart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation(); // Hook to get the current URL
   
-  // Check if user is logged in (Simple check)
+  // Check if user is logged in
   const isLoggedIn = !!localStorage.getItem("token");
+
+  // 1. HIDDEN RULE: If we are on the dashboard, DO NOT render this Navbar
+  if (location.pathname.startsWith('/dashboard')) {
+    return null;
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     alert("Logged out successfully");
     navigate("/login");
-    window.location.reload(); // Quick refresh to update UI
+    window.location.reload(); 
   };
 
   return (
@@ -40,14 +46,12 @@ const Navbar = () => {
 
             {isLoggedIn ? (
               <>
-                {/* --- NEW LINK ADDED HERE --- */}
                 <Link 
                   to="/orders" 
                   className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   <ClipboardList className="w-4 h-4" /> My Orders
                 </Link>
-                {/* --------------------------- */}
 
                 <button 
                   onClick={handleLogout}

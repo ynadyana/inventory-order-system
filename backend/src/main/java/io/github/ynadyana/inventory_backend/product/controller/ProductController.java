@@ -1,5 +1,3 @@
-// src/main/java/io/github/ynadyana/inventory_backend/product/controller/ProductController.java
-
 package io.github.ynadyana.inventory_backend.product.controller;
 
 import io.github.ynadyana.inventory_backend.product.dto.ProductRequest;
@@ -7,17 +5,19 @@ import io.github.ynadyana.inventory_backend.product.dto.ProductResponse;
 import io.github.ynadyana.inventory_backend.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.io.IOException;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -26,12 +26,20 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // POST /api/products (STAFF ONLY)
-    @PostMapping
+    // --- FIX: UPDATED TO ACCEPT FILE + DATA (MULTIPART) ---
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('STAFF')")
-    public ProductResponse createProduct(@Valid @RequestBody ProductRequest request) {
-        return productService.createProduct(request);
+    @PreAuthorize("hasRole('STAFF')") // Ensure user is STAFF
+    public ProductResponse createProduct(
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("stock") Integer stock,
+            @RequestParam("category") String category,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+        // We pass the raw fields to the service
+        return productService.createProductWithImage(name, description, price, stock, category, image);
     }
 
     // GET /api/products (CUSTOMER & STAFF)
@@ -39,7 +47,7 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('CUSTOMER', 'STAFF')")
     public Page<ProductResponse> getAllProducts(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category, // <--- New Param
+            @RequestParam(required = false) String category,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         boolean isStaff = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
@@ -47,6 +55,7 @@ public class ProductController {
 
         return productService.getAllProducts(search, category, isStaff, pageable);
     }
+
     // GET /api/products/{id} (CUSTOMER & STAFF)
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'STAFF')")
@@ -69,9 +78,9 @@ public class ProductController {
         productService.deactivateProduct(id);
     }
 
-    // NEW ENDPOINT: Upload Image
+    // Upload Image Endpoint (Optional Utility)
     @PostMapping("/{id}/image")
-    @PreAuthorize("hasRole('STAFF')") // Only staff can upload
+    @PreAuthorize("hasRole('STAFF')")
     public ProductResponse uploadImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file

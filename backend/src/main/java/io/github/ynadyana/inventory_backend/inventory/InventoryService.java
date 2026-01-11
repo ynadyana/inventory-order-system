@@ -1,13 +1,10 @@
 package io.github.ynadyana.inventory_backend.inventory;
 
 import io.github.ynadyana.inventory_backend.product.model.Product;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,34 +12,44 @@ public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
 
-    public Inventory getInventory(String sku) {
-        return inventoryRepository.findByProduct_Sku(sku)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory not found for SKU: " + sku));
+    // 1. Create Inventory (Used by ProductService)
+    public void createInventory(Product product, Integer initialStock) {
+        Inventory inventory = new Inventory();
+        inventory.setProduct(product);
+        inventory.setQuantity(initialStock != null ? initialStock : 0);
+        inventoryRepository.save(inventory);
     }
 
-    // vvvvv CHANGED "void" TO "Inventory" vvvvv
-    @Transactional
-    public Inventory updateStock(String sku, int quantityChange) {
-        Inventory inventory = getInventory(sku);
-        int newQuantity = inventory.getQuantity() + quantityChange;
+    // 2. Check Stock (Used by OrderService)
+    public boolean checkStock(Long productId, Integer quantity) {
+        Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
+        return inventory.isPresent() && inventory.get().getQuantity() >= quantity;
+    }
+
+    // 3. Reduce Stock (Used by OrderService)
+    public void reduceStock(Long productId, Integer quantity) {
+        Inventory inventory = inventoryRepository.findByProductId(productId)
+                .orElseThrow(() -> new RuntimeException("Product not in inventory"));
         
-        if (newQuantity < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock");
+        if (inventory.getQuantity() < quantity) {
+            throw new RuntimeException("Insufficient stock");
         }
         
-        inventory.setQuantity(newQuantity);
-        inventory.setLastUpdated(Instant.now());
-        
-        // vvvvv ADDED "return" HERE vvvvv
-        return inventoryRepository.save(inventory);
+        inventory.setQuantity(inventory.getQuantity() - quantity);
+        inventoryRepository.save(inventory);
     }
 
-    public void createInventory(Product product) {
-        Inventory inventory = Inventory.builder()
-                .product(product)
-                .quantity(0)
-                .lastUpdated(Instant.now())
-                .build();
-        inventoryRepository.save(inventory);
+    // 4. Get Inventory by SKU (Fixes Controller Error)
+    public Inventory getInventory(String sku) {
+        return inventoryRepository.findByProductSku(sku)
+                .orElseThrow(() -> new RuntimeException("Inventory not found for SKU: " + sku));
+    }
+
+    // 5. Update Stock by SKU (Fixes Controller Error)
+    // --- CHANGED FROM void TO Inventory ---
+    public Inventory updateStock(String sku, int quantity) {
+        Inventory inventory = getInventory(sku);
+        inventory.setQuantity(quantity);
+        return inventoryRepository.save(inventory); // Returns the updated object now!
     }
 }

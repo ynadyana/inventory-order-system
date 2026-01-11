@@ -5,6 +5,9 @@ import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Login from './pages/Login'; 
 import Orders from './pages/Orders';
+import Dashboard from './pages/admin/Dashboard';
+import ManageProducts from './pages/admin/ManageProducts';
+import ManageOrders from './pages/admin/ManageOrders';
 
 function App() {
   return (
@@ -17,7 +20,10 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/orders" element={<Orders />} />
-              <Route path="/login" element={<Login />} /> {}
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/products" element={<ManageProducts />} /> 
+              <Route path="/dashboard/orders" element={<ManageOrders />} /> {}
             </Routes>
           </main>
         </div>

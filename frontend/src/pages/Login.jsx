@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../lib/axios"; // Uses your configured axios
+import api from "../lib/axios"; 
 import { Lock, Mail, User } from "lucide-react";
 
 const Login = () => {
@@ -20,16 +20,25 @@ const Login = () => {
     try {
       const response = await api.post("/auth/login", formData);
       
-      // 1. Save the token to Local Storage (The Browser's Pocket)
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role); // If your backend sends role
+      // Extract data from response
+      const { token, role } = response.data;
+
+      // 1. Save to Local Storage
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role); 
       
-      // 2. Alert success
       alert("Login Successful!");
       
-      // 3. Redirect to Home
-      navigate("/");
-      window.location.reload(); // Reload to update Navbar (Simple fix for now)
+      // 2. Intelligent Redirect based on Role
+      // Checks for "STAFF" or "ROLE_STAFF" depending on how your backend sends it
+      if (role === "STAFF" || role === "ROLE_STAFF") {
+        navigate("/dashboard"); // Redirect Staff to Dashboard
+      } else {
+        navigate("/"); // Redirect Customers to Home
+      }
+
+      // 3. Refresh to update UI (Navbar changes)
+      window.location.reload();
 
     } catch (err) {
       console.error(err);
