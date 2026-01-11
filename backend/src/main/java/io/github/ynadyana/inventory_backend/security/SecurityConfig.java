@@ -42,6 +42,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll() 
+                .requestMatchers("/api/health/**").permitAll()
                 // 3. Authenticated Access Rules
                 .anyRequest().authenticated()
             )
