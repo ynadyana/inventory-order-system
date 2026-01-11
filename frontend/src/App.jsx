@@ -3,7 +3,8 @@ import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
-import Login from './pages/Login'; // <--- IMPORT THIS
+import Login from './pages/Login'; 
+import Orders from './pages/Orders';
 
 function App() {
   return (
@@ -15,7 +16,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/cart" element={<Cart />} />
-              <Route path="/login" element={<Login />} /> {/* <--- UPDATE THIS */}
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/login" element={<Login />} /> {}
             </Routes>
           </main>
         </div>

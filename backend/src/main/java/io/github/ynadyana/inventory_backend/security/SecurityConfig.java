@@ -13,18 +13,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration; // REQUIRED IMPORT
-import org.springframework.web.cors.CorsConfigurationSource; // REQUIRED IMPORT
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource; // REQUIRED IMPORT
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays; // REQUIRED IMPORT
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity 
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -44,7 +46,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll() 
                 .requestMatchers("/api/health/**").permitAll()
-                // 3. Authenticated Access Rules
+
+                // Allow any logged-in user to place orders and view history
+                .requestMatchers("/api/orders/**").authenticated()
+                
+                // 3. Authenticated Access Rules (Catch-all)
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

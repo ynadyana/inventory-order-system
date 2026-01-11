@@ -18,10 +18,6 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    /**
-     * Recommended: store as Base64 in APP_JWT_SECRET.
-     * Example: a long base64 string. If you store plain text instead, remove Decoders.BASE64 and use UTF-8 bytes.
-     */
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
@@ -38,10 +34,10 @@ public class JwtService {
 
         return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())          // JJWT 0.11.x uses setSubject(...)
+                .setSubject(userDetails.getUsername())      
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // no Jwts.SIG in 0.11.x
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 

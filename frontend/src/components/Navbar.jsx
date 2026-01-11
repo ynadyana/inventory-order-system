@@ -1,4 +1,4 @@
-import { ShoppingCart, Package, LogOut, User } from 'lucide-react';
+import { ShoppingCart, Package, LogOut, User, ClipboardList } from 'lucide-react'; // Added ClipboardList icon
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
@@ -39,12 +39,23 @@ const Navbar = () => {
             </Link>
 
             {isLoggedIn ? (
-              <button 
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700"
-              >
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
+              <>
+                {/* --- NEW LINK ADDED HERE --- */}
+                <Link 
+                  to="/orders" 
+                  className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+                >
+                  <ClipboardList className="w-4 h-4" /> My Orders
+                </Link>
+                {/* --------------------------- */}
+
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700"
+                >
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </>
             ) : (
               <Link 
                 to="/login" 

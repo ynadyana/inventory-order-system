@@ -20,7 +20,7 @@ const Cart = () => {
         }))
       };
 
-      await api.post('/api/orders', orderRequest);
+      await api.post('/orders', orderRequest);
       
       alert("🎉 Order Placed Successfully!");
       clearCart(); 

@@ -1,39 +1,44 @@
 package io.github.ynadyana.inventory_backend.order.model;
 
-import io.github.ynadyana.inventory_backend.user.AppUser; // Corrected Import
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.github.ynadyana.inventory_backend.user.AppUser;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "orders")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Order {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user; // Changed from User to AppUser
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> items;
+    @JoinColumn(name = "user_id")
+    private AppUser user;
 
     private BigDecimal totalAmount;
+    private LocalDateTime orderDate;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status; 
+    @Enumerated(EnumType.STRING) 
+    private OrderStatus status;
 
-    @CreationTimestamp
-    private Instant createdAt;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<OrderItem> items;
+
+    @PrePersist
+    protected void onCreate() {
+        if (orderDate == null) orderDate = LocalDateTime.now();
+        
+    }
 }
