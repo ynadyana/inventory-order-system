@@ -12,7 +12,6 @@ const Payment = () => {
   // Calculate Total
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  // Fake Form State
   const [cardData, setCardData] = useState({
     name: '',
     cardNumber: '',
@@ -28,7 +27,7 @@ const Payment = () => {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Simulate "Processing" Delay (2 Seconds)
+    // 1. Delay (2 Seconds)
     setTimeout(async () => {
       try {
         // 2. Prepare Data for Backend
@@ -41,7 +40,7 @@ const Payment = () => {
           totalAmount: totalAmount
         };
 
-        // 3. Call Real Backend API (Deduct Stock & Save Order)
+        // 3. Deduct Stock & Save Order
         await api.post('/orders', orderData);
 
         // 4. Success! Clear cart and redirect
@@ -55,7 +54,7 @@ const Payment = () => {
       } finally {
         setLoading(false);
       }
-    }, 2000); // 2000ms = 2 seconds delay
+    }, 2000); // 2 seconds delay
   };
 
   if (cart.length === 0) return <div className="text-center py-20">Your cart is empty.</div>;

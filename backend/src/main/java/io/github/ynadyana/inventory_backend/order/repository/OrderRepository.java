@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    // This allows the service to find orders by the AppUser object
+    
     List<Order> findByUser(AppUser user); 
 }

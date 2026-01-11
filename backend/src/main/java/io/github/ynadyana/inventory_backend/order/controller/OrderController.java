@@ -2,7 +2,7 @@ package io.github.ynadyana.inventory_backend.order.controller;
 
 import io.github.ynadyana.inventory_backend.order.dto.OrderRequest;
 import io.github.ynadyana.inventory_backend.order.model.Order;
-import io.github.ynadyana.inventory_backend.order.model.OrderStatus; // Import Enum
+import io.github.ynadyana.inventory_backend.order.model.OrderStatus;
 import io.github.ynadyana.inventory_backend.order.service.OrderService;
 import io.github.ynadyana.inventory_backend.user.AppUser;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +26,11 @@ public class OrderController {
 
     @GetMapping
     public List<Order> getOrders(@AuthenticationPrincipal AppUser user) {
-        // --- FIX IS HERE: Changed 'getMyOrders' to 'getAllOrders' ---
+    
         return orderService.getAllOrders(user);
     }
 
-    // --- NEW ENDPOINT: Update Status (For Manage Orders Page) ---
+ 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('STAFF')") // Only Staff can do this
     public Order updateStatus(@PathVariable Long id, @RequestParam OrderStatus status) {

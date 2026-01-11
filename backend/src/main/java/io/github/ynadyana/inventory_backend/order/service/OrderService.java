@@ -5,8 +5,8 @@ import io.github.ynadyana.inventory_backend.order.model.Order;
 import io.github.ynadyana.inventory_backend.order.model.OrderItem;
 import io.github.ynadyana.inventory_backend.order.model.OrderStatus;
 import io.github.ynadyana.inventory_backend.order.repository.OrderRepository;
-import io.github.ynadyana.inventory_backend.product.model.Product; // Import
-import io.github.ynadyana.inventory_backend.product.repository.ProductRepository; // Import
+import io.github.ynadyana.inventory_backend.product.model.Product;
+import io.github.ynadyana.inventory_backend.product.repository.ProductRepository; 
 import io.github.ynadyana.inventory_backend.user.AppUser;
 import io.github.ynadyana.inventory_backend.user.Role;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository; // <--- 1. Inject this
+    private final ProductRepository productRepository; 
 
     @Transactional
     public Order placeOrder(AppUser user, OrderRequest request) {
@@ -31,6 +31,8 @@ public class OrderService {
                 .totalAmount(request.getTotalAmount())
                 .status(OrderStatus.COMPLETED)
                 .orderDate(LocalDateTime.now())
+                .shippingMethod(request.getShippingMethod())
+                .shippingAddress(request.getShippingAddress())
                 .build();
 
         List<OrderItem> items = new ArrayList<>();
@@ -42,7 +44,7 @@ public class OrderService {
 
             OrderItem orderItem = OrderItem.builder()
                     .productId(itemRequest.getProductId())
-                    .product(product) // <--- CRITICAL: Link the actual object
+                    .product(product) 
                     .quantity(itemRequest.getQuantity())
                     .price(itemRequest.getPrice())
                     .order(order)

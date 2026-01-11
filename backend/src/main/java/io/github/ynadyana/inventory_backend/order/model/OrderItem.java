@@ -20,12 +20,11 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // We keep this for easy reference
+   
     @Column(name = "product_id")
     private Long productId;
 
-    // --- FIX: ADD THIS RELATIONSHIP ---
-    // This tells JPA: "Use the product_id column to fetch the full Product details"
+ 
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     private Product product; 
@@ -35,6 +34,6 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
-    @JsonIgnore // Prevent infinite loops
+    @JsonIgnore 
     private Order order;
 }

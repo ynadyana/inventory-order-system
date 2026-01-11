@@ -45,11 +45,10 @@ public class InventoryService {
                 .orElseThrow(() -> new RuntimeException("Inventory not found for SKU: " + sku));
     }
 
-    // 5. Update Stock by SKU (Fixes Controller Error)
-    // --- CHANGED FROM void TO Inventory ---
+    // 5. Update Stock by SKU 
     public Inventory updateStock(String sku, int quantity) {
         Inventory inventory = getInventory(sku);
         inventory.setQuantity(quantity);
-        return inventoryRepository.save(inventory); // Returns the updated object now!
+        return inventoryRepository.save(inventory);
     }
 }
