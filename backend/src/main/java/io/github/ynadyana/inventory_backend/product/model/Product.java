@@ -35,17 +35,27 @@ public class Product {
 
     private String imageUrl;
 
+    
 
     @Column(nullable = false)
     private BigDecimal price;
 
     private boolean active;
+    
+    private Integer totalStock;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
-    private List<ProductColor> colors = new ArrayList<>();
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductVariant> variants = new ArrayList<>();
+    
    
     private Integer stock;
+
+    public Integer getTotalStock() {
+        if (variants == null || variants.isEmpty()) {
+            return totalStock; 
+        }
+        return variants.stream().mapToInt(ProductVariant::getStock).sum();
+    }
 
     @CreationTimestamp
     private Instant createdAt;

@@ -2,8 +2,9 @@ import { Eye } from 'lucide-react';
 import { useState } from 'react';
 
 const ProductCard = ({ product, onQuickView }) => {
-  const isSoldOut = product.stock <= 0;
-  
+  const stockCount = product.totalStock !== undefined ? product.totalStock : product.stock;
+  const isSoldOut = stockCount <= 0;  
+
   const [activeImage, setActiveImage] = useState(null); 
 
   const currentImage = activeImage || product.imageUrl;
@@ -12,6 +13,7 @@ const ProductCard = ({ product, onQuickView }) => {
     if (!path) return "https://via.placeholder.com/300";
     return path.startsWith('http') ? path : `http://localhost:8080/${path}`;
   };
+ const variants = product.variants || product.colors || [];
 
   return (
     <div className="group cursor-pointer flex flex-col h-full bg-white rounded-xl p-3 hover:shadow-lg transition-shadow duration-300">
@@ -31,12 +33,12 @@ const ProductCard = ({ product, onQuickView }) => {
           alt={product.name}
         />
 
-        {/* Quick View Button (Visible on Hover) */}
+        {/* Quick View Button */}
         {!isSoldOut && (
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
             <button 
               onClick={(e) => { e.stopPropagation(); onQuickView(); }}
-              className="bg-white text-gray-900 px-5 py-2 rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-black hover:text-white"
+              className="bg-white text-gray-900 px-5 py-2 rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transform translate-y-4 group-hover/image:translate-y-0 transition-all duration-300 hover:bg-black hover:text-white"
             >
               <Eye size={16} /> Quick View
             </button>
@@ -55,25 +57,21 @@ const ProductCard = ({ product, onQuickView }) => {
         </p>
 
         {/* --- DYNAMIC COLOR DOTS --- */}
-        {product.colors && product.colors.length > 0 && (
+        {variants.length > 0 && (
           <div className="flex gap-2 mt-2 h-5 items-center">
-            {product.colors.map((variant, index) => {
+            {variants.map((variant, index) => {
               
               const colorHex = typeof variant === 'string' 
                   ? variant 
-                  : (variant.color || variant.colorValue || variant.color_value || variant.value || variant.colorHex || '#000000');
+                  : (variant.colorHex || variant.colorValue || variant.color || '#000000');
 
               return (
                 <div
                   key={index}
                   onMouseEnter={() => setActiveImage(variant.imageUrl)}
                   onMouseLeave={() => setActiveImage(null)}
-                  
-                  // 2. Apply the color directly
                   style={{ backgroundColor: colorHex }} 
-                  
                   className="w-5 h-5 rounded-full border border-gray-300 shadow-sm cursor-pointer transition-all hover:scale-110 hover:border-gray-500"
-                  
                 />
               );
             })}

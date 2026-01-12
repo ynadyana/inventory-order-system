@@ -1,5 +1,5 @@
 package io.github.ynadyana.inventory_backend.product.dto;
-import io.github.ynadyana.inventory_backend.product.model.ProductColor; 
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -14,5 +14,13 @@ public record ProductResponse(
     boolean active,
     String imageUrl,
     Integer stock, 
-    List<ProductColor> colors
-) {}
+    List<VariantDto> variants
+) {
+    public record VariantDto(
+        String colorName,
+        String colorHex,
+        String imageUrl,
+        Integer stock
+    ) {}
+
+}

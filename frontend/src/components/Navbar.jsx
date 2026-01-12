@@ -5,12 +5,11 @@ import { useCart } from '../context/CartContext';
 const Navbar = () => {
   const { cart } = useCart();
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get the current URL
+  const location = useLocation(); 
   
   // Check if user is logged in
   const isLoggedIn = !!localStorage.getItem("token");
 
-  // 1. HIDDEN RULE: If we are on the dashboard, DO NOT render this Navbar
   if (location.pathname.startsWith('/dashboard')) {
     return null;
   }

@@ -1,22 +1,34 @@
 import { X, Minus, Plus, Heart, ShoppingCart } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 
 const QuickView = ({ product, onClose }) => {
   const [qty, setQty] = useState(1);
   const { addToCart } = useCart();
 
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [hoveredImage, setHoveredImage] = useState(null);
 
+  const variants = product.variants || product.colors || [];
+  // --- LOGIC: DETERMINE STOCK ---
+  // If a color is selected, use that color's stock. Otherwise, use total product stock.
+  const currentStock = selectedVariant ? selectedVariant.stock : (product.totalStock || product.stock || 0);
+  const isOutOfStock = currentStock <= 0;
+
+  // Reset quantity if stock changes 
+  useEffect(() => {
+    if (qty > currentStock && currentStock > 0) {
+        setQty(currentStock);
+    }
+  }, [currentStock, qty]);
 
   const getFullUrl = (path) => {
     if (!path) return "https://via.placeholder.com/300";
     return path.startsWith('http') ? path : `http://localhost:8080/${path}`;
   };
 
- 
-  const currentImage = hoveredImage || selectedImage || product.imageUrl;
+  // Image Logic: Hover -> Selected Color -> Default Main Image
+  const currentImage = hoveredImage || (selectedVariant ? selectedVariant.imageUrl : null) || product.imageUrl;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -29,12 +41,15 @@ const QuickView = ({ product, onClose }) => {
 
         {/* Left: Product Gallery */}
         <div className="w-full md:w-1/2 bg-[#f8f9fa] p-12 flex items-center justify-center relative group">
-          {product.stock <= 0 && (
-             <span className="absolute top-6 left-6 bg-gray-900 text-white text-xs font-bold px-3 py-1 uppercase tracking-widest">Sold Out</span>
+          {/* Tag showing Status */}
+          {isOutOfStock && (
+             <span className="absolute top-6 left-6 bg-red-600 text-white text-xs font-bold px-3 py-1 uppercase tracking-widest shadow-sm">
+               {selectedVariant ? `${selectedVariant.colorName} Sold Out` : "Sold Out"}
+             </span>
           )} 
           <img 
             src={getFullUrl(currentImage)} 
-            className="w-full h-auto object-contain mix-blend-multiply transition-all duration-500 transform group-hover:scale-105" 
+            className={`w-full h-auto object-contain mix-blend-multiply transition-all duration-500 transform group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
             alt={product.name} 
           />
         </div>
@@ -45,36 +60,36 @@ const QuickView = ({ product, onClose }) => {
             {product.name}
           </h2>
           
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-4">
             <span className="text-2xl font-bold text-cyan-600">RM{product.price.toLocaleString()}</span>
-            <span className="text-gray-400 line-through text-lg">RM{(product.price * 1.1).toLocaleString()}</span>
+            {/* Dynamic Stock Text */}
+            <span className={`text-sm font-bold px-2 py-1 rounded ${currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {currentStock > 0 ? `${currentStock} in stock` : 'Out of Stock'}
+            </span>
           </div>
 
           {/* COLORS SECTION */}
-          {product.colors && product.colors.length > 0 && (
+          {variants.length > 0 && (
             <div className="mb-8">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-3">Select Variant</span>
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-3">
+                 Select Variant {selectedVariant && `- ${selectedVariant.colorName}`}
+              </span>
               <div className="flex gap-3">
-                {product.colors.map((variant, index) => {
+                {variants.map((variant, index) => {
                   
-                  // Safe Color Extraction
+                  // Handle mapping (New Backend uses 'colorHex', old might use strings)
                   const colorHex = typeof variant === 'string' 
                     ? variant 
-                    : (variant.color || variant.colorValue || variant.color_value || variant.value || variant.colorHex || '#000000');
+                    : (variant.colorHex || variant.colorValue || '#000000');
                     
-                  
-                  const isSelected = selectedImage === variant.imageUrl;
+                  // Compare objects to see if selected
+                  const isSelected = selectedVariant === variant;
 
                   return (
                     <button
                       key={index}
-                      
-                      onClick={() => setSelectedImage(variant.imageUrl)}
-                      
-                      // Hover
+                      onClick={() => setSelectedVariant(variant)} // Store WHOLE object
                       onMouseEnter={() => setHoveredImage(variant.imageUrl)}
-                      
-                     //Clear preview (falls back to selectedImage)
                       onMouseLeave={() => setHoveredImage(null)}
                       
                       className={`w-8 h-8 rounded-full border shadow-sm transition-all duration-200 ${
@@ -83,7 +98,7 @@ const QuickView = ({ product, onClose }) => {
                            : 'border-gray-200 hover:scale-110 hover:border-gray-400'
                       }`}
                       style={{ backgroundColor: colorHex }}
-                      title={`Color: ${colorHex}`} 
+                      title={`${variant.colorName || 'Color'} (${variant.stock} left)`} 
                     />
                   );
                 })}
@@ -92,23 +107,36 @@ const QuickView = ({ product, onClose }) => {
           )}
 
           <p className="text-gray-600 text-sm leading-relaxed mb-8 border-t border-gray-100 pt-6">
-            {product.description || "Premium high-performance tech gear designed for professionals. Featuring the latest hardware and sleek modern design."}
+            {product.description || "Premium high-performance tech gear."}
           </p>
 
           <div className="mt-auto space-y-6">
             {/* Quantity & Add to Cart */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center border border-gray-200 rounded-full bg-gray-50 px-4 py-2">
+              
+              <div className={`flex items-center border border-gray-200 rounded-full bg-gray-50 px-4 py-2 ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
                 <button onClick={() => setQty(Math.max(1, qty - 1))} className="text-gray-500 hover:text-black transition"><Minus size={16} /></button>
                 <span className="w-12 text-center font-bold text-gray-900">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="text-gray-500 hover:text-black transition"><Plus size={16} /></button>
+                <button onClick={() => setQty(Math.min(currentStock, qty + 1))} className="text-gray-500 hover:text-black transition"><Plus size={16} /></button>
               </div>
               
               <button 
-                onClick={() => { addToCart({...product, quantity: qty}); onClose(); }}
-                className="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 px-8 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg"
+                disabled={isOutOfStock}
+                onClick={() => { 
+                    addToCart({
+                        ...product, 
+                        quantity: qty,
+                        selectedVariant: selectedVariant // Pass selection to cart
+                    }); 
+                    onClose(); 
+                }}
+                className={`flex-1 font-bold py-3 px-8 rounded-full flex items-center justify-center gap-2 transition-all transform shadow-lg
+                    ${isOutOfStock 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                        : 'bg-gray-900 hover:bg-black text-white active:scale-95'
+                    }`}
               >
-                <ShoppingCart size={18} /> ADD TO CART
+                <ShoppingCart size={18} /> {isOutOfStock ? "SOLD OUT" : "ADD TO CART"}
               </button>
               
               <button className="p-3 border border-gray-200 rounded-full hover:bg-gray-50 text-gray-400 hover:text-red-500 transition-colors">

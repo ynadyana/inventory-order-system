@@ -5,7 +5,10 @@ package io.github.ynadyana.inventory_backend.product.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import java.math.BigDecimal;
+import java.util.List;
+
 
 public record ProductRequest(
     @NotBlank(message = "SKU is required")
@@ -21,5 +24,14 @@ public record ProductRequest(
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than zero")
-    BigDecimal price
-) {}
+    BigDecimal price,
+
+     List<VariantDto> variants
+) {
+    @Data
+    public static class VariantDto {
+        private String colorName;
+        private String colorHex;
+        private Integer stock; 
+    }
+ }

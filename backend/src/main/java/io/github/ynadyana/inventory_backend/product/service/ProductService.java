@@ -1,11 +1,12 @@
 package io.github.ynadyana.inventory_backend.product.service;
 
 import io.github.ynadyana.inventory_backend.inventory.Inventory;
-import io.github.ynadyana.inventory_backend.inventory.InventoryRepository; // <--- Import this
+import io.github.ynadyana.inventory_backend.inventory.InventoryRepository;
 import io.github.ynadyana.inventory_backend.inventory.InventoryService;
 import io.github.ynadyana.inventory_backend.product.dto.ProductRequest;
 import io.github.ynadyana.inventory_backend.product.dto.ProductResponse;
 import io.github.ynadyana.inventory_backend.product.model.Product;
+import io.github.ynadyana.inventory_backend.product.model.ProductVariant; 
 import io.github.ynadyana.inventory_backend.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +41,7 @@ public class ProductService {
     private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
 
     // --- 1. CREATE WITH IMAGE ---
-    public ProductResponse createProductWithImage(String name, String description, BigDecimal price, Integer stock, String category, MultipartFile image) throws IOException {
+    public ProductResponse createProductWithImage(String name, String description, BigDecimal price, Integer stock, String category, MultipartFile image, List<ProductRequest.VariantDto> variantDtos) throws IOException {
         String imageUrl = null;
 
         if (image != null && !image.isEmpty()) {
@@ -60,12 +64,32 @@ public class ProductService {
                 .active(true)
                 .build();
 
+        if (variantDtos != null && !variantDtos.isEmpty()) {
+            List<ProductVariant> variants = new ArrayList<>();
+            for (ProductRequest.VariantDto vDto : variantDtos) {
+                ProductVariant v = new ProductVariant();
+                v.setColorName(vDto.getColorName());
+                v.setColorHex(vDto.getColorHex());
+                v.setStock(vDto.getStock()); 
+                v.setProduct(product);
+                variants.add(v);
+            }
+            product.setVariants(variants);
+            
+            // Calculate total stock from variants
+            int totalVariantStock = variants.stream().mapToInt(ProductVariant::getStock).sum();
+            product.setTotalStock(totalVariantStock);
+        } else {
+            // No variants? Use the simple stock value
+            product.setTotalStock(stock != null ? stock : 0);
+        }
+
         Product savedProduct = productRepository.save(product);
         
         // Pass the stock to inventory (Fixing the null/0 issue)
-        inventoryService.createInventory(savedProduct, stock != null ? stock : 0); 
+        inventoryService.createInventory(savedProduct, savedProduct.getTotalStock());
         
-        log.info("Product created: {} (Stock: {})", savedProduct.getName(), stock);
+        log.info("Product created: {} (Stock: {})", savedProduct.getName(), savedProduct.getTotalStock());
         return toProductResponse(savedProduct);
     }
 
@@ -113,11 +137,28 @@ public class ProductService {
     
 
     private ProductResponse toProductResponse(Product product) {
-        // 1. Fetch the stock from Inventory Table
-        Optional<Inventory> inventory = inventoryRepository.findByProductId(product.getId());
-        Integer currentStock = inventory.map(Inventory::getQuantity).orElse(0);
+        // 1. Calculate Stock: If variants exist, sum them. If not, use Inventory table/cache.
+        int currentStock;
+        List<ProductResponse.VariantDto> responseVariants = new ArrayList<>();
 
-        // 2. Return data INCLUDING the stock
+        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+            // Case A: Product HAS variants
+            currentStock = product.getVariants().stream().mapToInt(ProductVariant::getStock).sum();
+            
+            // Map Entity Variants to DTO Variants
+            responseVariants = product.getVariants().stream().map(v -> new ProductResponse.VariantDto(
+                v.getColorName(),
+                v.getColorHex(),
+                v.getImageUrl(),
+                v.getStock() 
+            )).collect(Collectors.toList());
+            
+        } else {
+            // Case B: No variants
+            Optional<Inventory> inventory = inventoryRepository.findByProductId(product.getId());
+            currentStock = inventory.map(Inventory::getQuantity).orElse(0);
+        }
+
         return new ProductResponse(
             product.getId(),
             product.getSku(),
@@ -127,8 +168,12 @@ public class ProductService {
             product.getPrice(),
             product.isActive(),
             product.getImageUrl(),
-            currentStock,
-            product.getColors()
+            currentStock,       // Total Stock
+            responseVariants    // The list of colors with their individual stock
         );
+    }
+    
+    public ProductResponse createProductWithImage(String name, String description, BigDecimal price, Integer stock, String category, MultipartFile image) throws IOException {
+        return createProductWithImage(name, description, price, stock, category, image, null);
     }
 }

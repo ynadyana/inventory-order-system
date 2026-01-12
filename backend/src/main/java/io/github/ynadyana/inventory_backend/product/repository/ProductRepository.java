@@ -17,7 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByNameContainingIgnoreCaseAndActiveTrue(String name, Pageable pageable);
 
     // 2. For Staff: Search by name (Active OR Inactive)
-    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);-
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     // 3. For Customers: Filter by Category AND Active
     Page<Product> findByCategoryAndActiveTrue(String category, Pageable pageable);
