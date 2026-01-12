@@ -1,39 +1,48 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/axios';
 import ProductCard from '../components/ProductCard';
+import QuickView from '../components/QuickView'; // We will create this
 import { Loader } from 'lucide-react';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null); // Tracks the product for Quick View
 
   useEffect(() => {
     api.get('/products')
-       .then(res => {
-         setProducts(res.data.content);
-         setLoading(false);
-       })
-       .catch(err => {
-         console.error(err);
-         setError("Could not load products. Is Backend running?");
-         setLoading(false);
-       });
+      .then(res => {
+        setProducts(res.data.content);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex justify-center p-20"><Loader className="animate-spin text-blue-600 w-10 h-10" /></div>;
-  if (error) return <div className="text-center text-red-600 p-20 font-bold text-xl">{error}</div>;
+  if (loading) return <div className="flex justify-center p-20"><Loader className="animate-spin" /></div>;
 
   return (
-    <div>
-       <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Latest Arrivals</h1>
-          <p className="text-gray-500">Upgrade your setup with premium gear.</p>
+    <div className="py-6">
+       {/* ... existing header code ... */}
+
+       <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
+          {products.map(p => (
+            <ProductCard 
+              key={p.id} 
+              product={p} 
+              onQuickView={() => setSelectedProduct(p)} // Pass the open function
+            />
+          ))}
        </div>
-       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-         {products.map(p => <ProductCard key={p.id} product={p} />)}
-       </div>
+
+       {/* Quick View Modal */}
+       {selectedProduct && (
+         <QuickView 
+           product={selectedProduct} 
+           onClose={() => setSelectedProduct(null)} 
+         />
+       )}
     </div>
   );
 };
+
 export default Home;

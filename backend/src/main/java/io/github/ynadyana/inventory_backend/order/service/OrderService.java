@@ -1,5 +1,6 @@
 package io.github.ynadyana.inventory_backend.order.service;
 
+import io.github.ynadyana.inventory_backend.inventory.InventoryService;
 import io.github.ynadyana.inventory_backend.order.dto.OrderRequest;
 import io.github.ynadyana.inventory_backend.order.model.Order;
 import io.github.ynadyana.inventory_backend.order.model.OrderItem;
@@ -23,6 +24,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository; 
+    private final InventoryService inventoryService; 
+    // EmailService removed!
 
     @Transactional
     public Order placeOrder(AppUser user, OrderRequest request) {
@@ -37,10 +40,12 @@ public class OrderService {
 
         List<OrderItem> items = new ArrayList<>();
 
-        // 2. Loop through requests and FETCH the real product
         for (var itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            // Deduct Stock
+            inventoryService.reduceStock(product.getId(), itemRequest.getQuantity());
 
             OrderItem orderItem = OrderItem.builder()
                     .productId(itemRequest.getProductId())

@@ -5,7 +5,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +17,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
-    private String jwtSecret;
-
-    @Value("${app.jwt.expiration-ms:86400000}") // default 1 day
-    private long jwtExpirationMs;
+    // --- HARDCODED SECRET KEY (The "Master Key") ---
+    // This bypasses the YAML file issue completely.
+    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    
+    private static final long JWT_EXPIRATION_MS = 86400000; // 1 Day
 
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
@@ -30,7 +29,7 @@ public class JwtService {
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         Date now = new Date(System.currentTimeMillis());
-        Date expiry = new Date(System.currentTimeMillis() + jwtExpirationMs);
+        Date expiry = new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS);
 
         return Jwts.builder()
                 .setClaims(extraClaims)
@@ -47,9 +46,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return username != null
-                && username.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     public boolean isTokenValid(String token) {
@@ -75,7 +72,8 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        // Use the hardcoded key
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
