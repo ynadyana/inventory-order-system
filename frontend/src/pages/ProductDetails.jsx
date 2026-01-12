@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart, Heart, ChevronDown, ChevronLeft, ChevronRight, RotateCcw, Truck, Info, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -244,9 +246,19 @@ const ProductDetails = () => {
                 {!isOutOfStock && <ShoppingCart size={20} />}
               </button>
 
-              <button className="h-14 w-14 border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 text-gray-400 hover:text-red-500 transition-all">
-                <Heart size={24} />
-              </button>
+              <button 
+                onClick={() => toggleWishlist(product)}
+                className={`h-14 w-14 border rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-90
+                ${isInWishlist(product.id) 
+                 ? 'bg-red-50 border-red-200 text-red-500' // Style when Active (Loved)
+                 : 'border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-red-500' // Style when Inactive
+                }`}
+                >
+                    <Heart 
+                        size={24} 
+                        fill={isInWishlist(product.id) ? "currentColor" : "none"} // Fills the heart with color if active
+                    />
+                </button>
             </div>
 
             {/* Accordion Info */}

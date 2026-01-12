@@ -1,7 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
+import { ToastProvider } from './context/ToastContext'; 
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import CartSidebar from './components/CartSidebar'; 
+import WishlistSidebar from './components/WishlistSidebar';
 import Cart from './pages/Cart';
 import Login from './pages/Login'; 
 import Orders from './pages/Orders';
@@ -12,13 +16,23 @@ import Payment from './pages/Payment';
 import Checkout from './pages/Checkout';
 import Register from './pages/Register';
 import ProductDetails from './pages/ProductDetails'; 
+import Wishlist from './pages/Wishlist'; 
+import Toast from './components/Toast'; 
 
 function App() {
   return (
+    <ToastProvider>
     <CartProvider>
       <BrowserRouter>
+      <WishlistProvider>
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
           <Navbar />
+
+          <CartSidebar />
+          <WishlistSidebar />
+
+          <Toast />
+
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -31,12 +45,15 @@ function App() {
               <Route path="/payment" element={<Payment />} /> 
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/product/:id" element={<ProductDetails />} />{}
+              <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/wishlist" element={<Wishlist />} />{}
             </Routes>
           </main>
         </div>
+        </WishlistProvider>
       </BrowserRouter>
     </CartProvider>
+    </ToastProvider>
   );
 }
 export default App;

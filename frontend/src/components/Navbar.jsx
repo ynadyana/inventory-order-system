@@ -1,9 +1,11 @@
-import { ShoppingCart, Package, LogOut, User, ClipboardList } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { ShoppingCart, Package, LogOut, User, ClipboardList, Heart } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; 
+import { useWishlist } from '../context/WishlistContext'; 
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
-  const { cart } = useCart();
+  const { cart, setIsCartOpen } = useCart(); 
+  const { wishlist, setIsWishlistOpen } = useWishlist();
   const navigate = useNavigate();
   const location = useLocation(); 
   
@@ -34,14 +36,32 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center gap-6">
-            <Link to="/cart" className="relative group">
+
+          {/* WISHLIST BUTTON (Changed from Link) */}
+            <button 
+              onClick={() => setIsWishlistOpen(true)}
+              className="relative group p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <Heart className="h-6 w-6 text-gray-500 group-hover:text-red-500 transition" />
+              {wishlist.length > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full ring-2 ring-white">
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
+
+            {/* CART BUTTON (Changed from Link) */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative group p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
               <ShoppingCart className="h-6 w-6 text-gray-500 group-hover:text-blue-600 transition" />
               {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                <span className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full ring-2 ring-white">
                   {cart.length}
                 </span>
               )}
-            </Link>
+            </button>
 
             {isLoggedIn ? (
               <>

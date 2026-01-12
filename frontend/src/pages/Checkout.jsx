@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import api from '../lib/axios';
-// Removed 'Download' icon and PDF libraries
 import { CreditCard, Truck, MapPin, Building, ShieldCheck, Lock, X, CheckCircle, Home } from 'lucide-react';
 
-// --- IMAGES (Ensure these exist in src/assets) ---
+// Images
 import maybankLogo from '../assets/maybank.png';
 import cimbLogo from '../assets/cimb.png';
 import bankIslamLogo from '../assets/bankislam.png';
@@ -34,7 +33,6 @@ const Checkout = () => {
   // Modals
   const [showBankModal, setShowBankModal] = useState(false);
   const [showTngModal, setShowTngModal] = useState(false);
-  const [tngStep, setTngStep] = useState(1);
   
   // Receipt Modal State
   const [showReceipt, setShowReceipt] = useState(false);
@@ -52,7 +50,7 @@ const Checkout = () => {
     }
     if (paymentMethod === 'online_banking') {
         if (!selectedBank) { alert("Please select a bank."); return; }
-        if (selectedBank === 'tng') { setTngStep(1); setShowTngModal(true); } 
+        if (selectedBank === 'tng') { setShowTngModal(true); } 
         else { setShowBankModal(true); }
     } else {
         processOrder();
@@ -68,8 +66,11 @@ const Checkout = () => {
             ? `[SELF PICKUP] ${TECHVAULT_ADDRESS}`
             : `${address.fullName}, ${address.street}, ${address.zip} ${address.city}`;
 
+        // 1. Calculate final total here to ensure it's captured before clearing cart
+        const finalTotal = total + (shippingMethod === 'delivery' ? 10 : 0);
+
         const orderRequest = {
-            totalAmount: total + (shippingMethod === 'delivery' ? 10 : 0),
+            totalAmount: finalTotal,
             shippingMethod: shippingMethod.toUpperCase(),
             shippingAddress: finalAddress,
             items: cart.map(item => ({
@@ -79,14 +80,18 @@ const Checkout = () => {
             }))
         };
 
-        // 1. Call API
+        // 2. Call API
         const response = await api.post('/orders', orderRequest);
         
-        // 2. Set Data for Receipt Modal
+        // 3. Set Receipt Data using the calculated finalTotal
         setOrderId(response.data.id); 
-        setFinalOrderData({ ...orderRequest, date: new Date().toLocaleString() });
+        setFinalOrderData({ 
+            ...orderRequest, 
+            totalAmount: finalTotal, // Explicitly set total to avoid issues
+            date: new Date().toLocaleString() 
+        });
 
-        // 3. Clear Cart & Show Receipt
+        // 4. Clear Cart & Show Receipt
         clearCart();
         setShowBankModal(false);
         setShowTngModal(false);
@@ -101,13 +106,13 @@ const Checkout = () => {
     }, 2000);
   };
 
-  if (cart.length === 0 && !showReceipt) return <div className="text-center py-20">Cart is empty.</div>;
+  if (cart.length === 0 && !showReceipt) return <div className="text-center py-20 font-bold text-gray-500">Your cart is empty.</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 relative">
        
-       <div className={`max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 ${showReceipt ? 'blur-sm' : ''}`}>
-           {/* ... Left Column (Shipping/Payment) ... */}
+       <div className={`max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 ${showReceipt ? 'blur-sm pointer-events-none' : ''}`}>
+           {/* Left Column (Shipping/Payment) */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Truck className="text-indigo-600" /> Shipping Method</h2>
@@ -162,7 +167,7 @@ const Checkout = () => {
                 </div>
             </div>
 
-            {/* ... Right Column (Summary) ... */}
+            {/* Right Column (Summary) */}
             <div className="h-fit">
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 sticky top-24">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Order Summary</h3>
@@ -177,8 +182,12 @@ const Checkout = () => {
                     
                     <div className="border-t border-gray-100 pt-4 space-y-2 text-sm">
                         <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>RM {total.toLocaleString()}</span></div>
-                        <div className="flex justify-between text-gray-500"><span>Delivery</span><span className="font-medium text-gray-900 capitalize">{shippingMethod}</span></div>
-                        <div className="flex justify-between text-gray-500"><span>Payment</span><span className="font-medium text-gray-900 truncate max-w-[150px] text-right">{paymentMethod === 'card' ? 'Credit Card' : (BANKS.find(b => b.id === selectedBank)?.name || 'Select Bank')}</span></div>
+                        <div className="flex justify-between text-gray-500">
+                            <span>Delivery</span>
+                            <span className="font-medium text-gray-900">
+                                {shippingMethod === 'delivery' ? 'RM 10' : 'Free'}
+                            </span>
+                        </div>
                         <div className="flex justify-between text-xl font-bold text-gray-900 mt-4 pt-4 border-t border-dashed border-gray-200"><span>Total</span><span>RM {(total + (shippingMethod === 'pickup' ? 0 : 10)).toLocaleString()}</span></div>
                     </div>
 
@@ -224,12 +233,11 @@ const Checkout = () => {
          </div>
       )}
 
-      {/* --- SUCCESS RECEIPT MODAL (Simplified) --- */}
+      {/* --- SUCCESS RECEIPT MODAL --- */}
       {showReceipt && finalOrderData && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-md animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col items-center p-8 text-center">
                 
-                {/* Success Icon */}
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
                     <CheckCircle className="w-10 h-10 text-green-600" />
                 </div>
@@ -240,7 +248,6 @@ const Checkout = () => {
                     Your order has been placed successfully!
                 </p>
 
-                {/* Receipt Card */}
                 <div className="bg-gray-50 rounded-xl p-6 w-full border border-gray-100 mb-8 text-left">
                     <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                         <span className="text-gray-500 text-sm">Order ID</span>
@@ -260,7 +267,6 @@ const Checkout = () => {
                     </div>
                 </div>
 
-                {/* Actions (Only Go Home now) */}
                 <div className="w-full">
                     <button 
                         onClick={() => navigate('/')}
