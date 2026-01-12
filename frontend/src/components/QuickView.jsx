@@ -27,7 +27,6 @@ const QuickView = ({ product, onClose }) => {
     return path.startsWith('http') ? path : `http://localhost:8080/${path}`;
   };
 
-  // Image Logic: Hover -> Selected Color -> Default Main Image
   const currentImage = hoveredImage || (selectedVariant ? selectedVariant.imageUrl : null) || product.imageUrl;
 
   return (
@@ -77,18 +76,19 @@ const QuickView = ({ product, onClose }) => {
               <div className="flex gap-3">
                 {variants.map((variant, index) => {
                   
-                  // Handle mapping (New Backend uses 'colorHex', old might use strings)
                   const colorHex = typeof variant === 'string' 
                     ? variant 
                     : (variant.colorHex || variant.colorValue || '#000000');
-                    
-                  // Compare objects to see if selected
+
+                  // 1. Check stock
+                  const isVariantSoldOut = variant.stock !== undefined && variant.stock <= 0;
+
                   const isSelected = selectedVariant === variant;
 
                   return (
                     <button
                       key={index}
-                      onClick={() => setSelectedVariant(variant)} // Store WHOLE object
+                      onClick={() => setSelectedVariant(variant)} 
                       onMouseEnter={() => setHoveredImage(variant.imageUrl)}
                       onMouseLeave={() => setHoveredImage(null)}
                       
@@ -97,7 +97,14 @@ const QuickView = ({ product, onClose }) => {
                            ? 'ring-2 ring-offset-2 ring-gray-900 scale-110 border-transparent' 
                            : 'border-gray-200 hover:scale-110 hover:border-gray-400'
                       }`}
-                      style={{ backgroundColor: colorHex }}
+                      style={{ 
+                        backgroundColor: colorHex,
+                        // 2. Diagonal line for out of stock
+                        backgroundImage: isVariantSoldOut 
+                          ? 'linear-gradient(to top right, transparent 48%, red 48%, red 52%, transparent 52%)' 
+                          : 'none',
+                        opacity: isVariantSoldOut ? 0.5 : 1
+                      }}
                       title={`${variant.colorName || 'Color'} (${variant.stock} left)`} 
                     />
                   );

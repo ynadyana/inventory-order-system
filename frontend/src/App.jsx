@@ -11,6 +11,7 @@ import ManageOrders from './pages/admin/ManageOrders';
 import Payment from './pages/Payment';
 import Checkout from './pages/Checkout';
 import Register from './pages/Register';
+import ProductDetails from './pages/ProductDetails'; 
 
 function App() {
   return (
@@ -29,7 +30,8 @@ function App() {
               <Route path="/dashboard/orders" element={<ManageOrders />} />
               <Route path="/payment" element={<Payment />} /> 
               <Route path="/checkout" element={<Checkout />} />
-              <Route path="/register" element={<Register />} />{}
+              <Route path="/register" element={<Register />} />
+              <Route path="/product/:id" element={<ProductDetails />} />{}
             </Routes>
           </main>
         </div>

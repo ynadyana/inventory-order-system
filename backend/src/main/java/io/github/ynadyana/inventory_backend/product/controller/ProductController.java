@@ -57,7 +57,7 @@ public class ProductController {
 
     // GET /api/products/{id} (CUSTOMER & STAFF)
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'STAFF')")
+    @PreAuthorize("permitAll()")
     public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
