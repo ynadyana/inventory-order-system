@@ -69,9 +69,6 @@ public class ProductService {
         return toProductResponse(savedProduct);
     }
 
-    // --- OTHER METHODS (Read, Update, Delete) ---
-    // (Keep your existing getAllProducts, getProductById, etc. logic here)
-
     public Page<ProductResponse> getAllProducts(String search, String category, boolean isStaff, Pageable pageable) {
         Page<Product> productsPage;
         if (search != null && !search.isBlank()) {
@@ -111,11 +108,10 @@ public class ProductService {
     }
 
     public ProductResponse uploadImage(Long id, MultipartFile file) {
-        // (Keep existing uploadImage logic)
-        return null; // Simplify for snippet, paste your existing logic here if needed
+        return null; 
     }
     
-    // --- THE CRITICAL FIX IS HERE ---
+
     private ProductResponse toProductResponse(Product product) {
         // 1. Fetch the stock from Inventory Table
         Optional<Inventory> inventory = inventoryRepository.findByProductId(product.getId());
@@ -131,7 +127,8 @@ public class ProductService {
             product.getPrice(),
             product.isActive(),
             product.getImageUrl(),
-            currentStock // <--- Pass the real stock count
+            currentStock,
+            product.getColors()
         );
     }
 }

@@ -1,8 +1,9 @@
 package io.github.ynadyana.inventory_backend.product.dto;
-
+import io.github.ynadyana.inventory_backend.product.model.ProductColor; 
 import java.math.BigDecimal;
+import java.util.List;
 
-// Add 'Integer stock' to the record
+
 public record ProductResponse(
     Long id,
     String sku,
@@ -12,5 +13,6 @@ public record ProductResponse(
     BigDecimal price,
     boolean active,
     String imageUrl,
-    Integer stock // <--- NEW FIELD
+    Integer stock, 
+    List<ProductColor> colors
 ) {}

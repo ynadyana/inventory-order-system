@@ -26,7 +26,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // --- FIX: UPDATED TO ACCEPT FILE + DATA (MULTIPART) ---
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('STAFF')") // Ensure user is STAFF
@@ -38,11 +37,11 @@ public class ProductController {
             @RequestParam("category") String category,
             @RequestParam(value = "image", required = false) MultipartFile image
     ) throws IOException {
-        // We pass the raw fields to the service
+
         return productService.createProductWithImage(name, description, price, stock, category, image);
     }
 
-    // GET /api/products (CUSTOMER & STAFF)
+
     @GetMapping
     @PreAuthorize("hasAnyRole('CUSTOMER', 'STAFF')")
     public Page<ProductResponse> getAllProducts(
@@ -63,14 +62,14 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    // PUT /api/products/{id} (STAFF ONLY)
+    // STAFF ONLY
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('STAFF')")
     public ProductResponse updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
         return productService.updateProduct(id, request);
     }
 
-    // DELETE /api/products/{id} (STAFF ONLY - Soft Delete)
+    // DELETE - STAFF only
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('STAFF')")
@@ -78,7 +77,7 @@ public class ProductController {
         productService.deactivateProduct(id);
     }
 
-    // Upload Image Endpoint (Optional Utility)
+    // Upload Image
     @PostMapping("/{id}/image")
     @PreAuthorize("hasRole('STAFF')")
     public ProductResponse uploadImage(

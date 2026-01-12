@@ -12,16 +12,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findBySku(String sku);
 
-    // --- SEARCH METHODS (BY NAME) ---
-
+  
     // 1. For Customers: Search by name AND ensure product is active
     Page<Product> findByNameContainingIgnoreCaseAndActiveTrue(String name, Pageable pageable);
 
     // 2. For Staff: Search by name (Active OR Inactive)
-    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
-
-
-    // --- FILTER METHODS (BY CATEGORY) ---
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);-
 
     // 3. For Customers: Filter by Category AND Active
     Page<Product> findByCategoryAndActiveTrue(String category, Pageable pageable);
@@ -29,11 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // 4. For Staff: Filter by Category (All)
     Page<Product> findByCategory(String category, Pageable pageable);
 
-
-    // --- DEFAULT LIST METHODS ---
-
     // 5. For Customers: Just get list (Active only)
     Page<Product> findByActiveTrue(Pageable pageable);
-
-    // 6. For Staff: findAll(Pageable) is already provided by JpaRepository
 }
