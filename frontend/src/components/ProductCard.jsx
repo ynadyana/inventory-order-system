@@ -1,9 +1,9 @@
 import { Eye } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import Navigation Hook
+import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ product, onQuickView }) => {
-  const navigate = useNavigate(); // 2. Initialize Navigation
+  const navigate = useNavigate(); 
 
   // Handle stock check (compatible with old and new data)
   const stockCount = product.totalStock !== undefined ? product.totalStock : product.stock;
@@ -23,7 +23,7 @@ const ProductCard = ({ product, onQuickView }) => {
 
   return (
     <div 
-      // 3. ENABLE NAVIGATION: Clicking the card goes to details page
+      // 3. Enable navigation
       onClick={() => navigate(`/product/${product.id}`)}
       className="group cursor-pointer flex flex-col h-full bg-white rounded-xl p-3 hover:shadow-lg transition-shadow duration-300"
     >
@@ -48,7 +48,7 @@ const ProductCard = ({ product, onQuickView }) => {
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
             <button 
               onClick={(e) => { 
-                e.stopPropagation(); // 4. PREVENT NAV: Clicking 'Quick View' keeps you on the current page
+                e.stopPropagation(); 
                 onQuickView(); 
               }}
               className="bg-white text-gray-900 px-5 py-2 rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transform translate-y-4 group-hover/image:translate-y-0 transition-all duration-300 hover:bg-black hover:text-white"

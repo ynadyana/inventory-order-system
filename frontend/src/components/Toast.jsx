@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 
 const Toast = () => {
   const { toastData, hideToast } = useToast();
-  const { setIsCartOpen, cart } = useCart(); // Get Sidebar toggle and cart count
+  const { setIsCartOpen, cart } = useCart(); 
   const navigate = useNavigate();
 
   if (!toastData) return null;

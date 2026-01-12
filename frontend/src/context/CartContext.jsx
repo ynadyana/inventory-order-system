@@ -36,8 +36,21 @@ export const CartProvider = ({ children }) => {
     setCart((prev) => prev.filter(item => item.id !== productId));
   };
   
-  const updateQuantity = (id, amount) => {
-    setCart(prev => prev.map(item => item.id === id ? { ...item, quantity: Math.max(1, amount) } : item));
+  const updateQuantity = (id, variantName, amount) => {
+    setCart(prev => prev.map(item => 
+        (item.id === id && item.selectedVariant?.colorName === variantName) 
+        ? { ...item, quantity: Math.max(1, amount) } 
+        : item
+    ));
+  };
+
+  const updateItemVariant = (itemId, oldVariant, newVariantObj) => {
+    setCart(prev => prev.map(item => {
+        if (item.id === itemId && item.selectedVariant?.colorName === oldVariant.colorName) {
+            return { ...item, selectedVariant: newVariantObj };
+        }
+        return item;
+    }));
   };
 
   // Clear cart after payment

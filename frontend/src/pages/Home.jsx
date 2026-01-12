@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/axios';
 import ProductCard from '../components/ProductCard';
-import QuickView from '../components/QuickView'; // We will create this
+import QuickView from '../components/QuickView'; 
 import { Loader } from 'lucide-react';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null); // Tracks the product for Quick View
+  const [selectedProduct, setSelectedProduct] = useState(null); 
 
   useEffect(() => {
     api.get('/products')
@@ -22,14 +22,13 @@ const Home = () => {
 
   return (
     <div className="py-6">
-       {/* ... existing header code ... */}
 
        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
           {products.map(p => (
             <ProductCard 
               key={p.id} 
               product={p} 
-              onQuickView={() => setSelectedProduct(p)} // Pass the open function
+              onQuickView={() => setSelectedProduct(p)} 
             />
           ))}
        </div>
