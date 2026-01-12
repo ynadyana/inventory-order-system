@@ -20,6 +20,7 @@ public record ProductResponse(
         String colorName,
         String colorHex,
         String imageUrl,
+        List<String> albumImages,
         Integer stock
     ) {}
 

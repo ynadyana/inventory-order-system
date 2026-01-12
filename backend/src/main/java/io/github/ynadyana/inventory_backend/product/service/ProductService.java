@@ -150,6 +150,7 @@ public class ProductService {
                 v.getColorName(),
                 v.getColorHex(),
                 v.getImageUrl(),
+                v.getAlbumImages(),
                 v.getStock() 
             )).collect(Collectors.toList());
             
