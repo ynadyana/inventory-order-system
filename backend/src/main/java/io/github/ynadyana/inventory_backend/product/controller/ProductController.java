@@ -1,22 +1,17 @@
 package io.github.ynadyana.inventory_backend.product.controller;
 
 import io.github.ynadyana.inventory_backend.product.dto.ProductRequest;
-import io.github.ynadyana.inventory_backend.product.dto.ProductResponse;
+import io.github.ynadyana.inventory_backend.product.model.Product;
 import io.github.ynadyana.inventory_backend.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 
 @RestController
@@ -26,64 +21,58 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('STAFF')") // Ensure user is STAFF
-    public ProductResponse createProduct(
+    // 1. Create Product (JSON only)
+    @PostMapping
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.createProduct(request));
+    }
+
+    // 2. Create Product with Image (Multipart)
+    @PostMapping(value = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Product> createProductWithImage(
+            @RequestParam("sku") String sku,
             @RequestParam("name") String name,
-            @RequestParam("description") String description,
             @RequestParam("price") BigDecimal price,
             @RequestParam("stock") Integer stock,
             @RequestParam("category") String category,
-            @RequestParam(value = "image", required = false) MultipartFile image
-    ) throws IOException {
-
-        return productService.createProductWithImage(name, description, price, stock, category, image);
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        return ResponseEntity.ok(productService.createProductWithImage(sku, name, price, stock, category, image));
     }
 
-
+    // 3. Get All (Search/Filter)
     @GetMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'STAFF')")
-    public Page<ProductResponse> getAllProducts(
+    public ResponseEntity<Page<Product>> getAllProducts(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(required = false, defaultValue = "true") boolean activeOnly,
+            Pageable pageable
     ) {
-        boolean isStaff = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"));
-
-        return productService.getAllProducts(search, category, isStaff, pageable);
+        return ResponseEntity.ok(productService.getAllProducts(search, category, activeOnly, pageable));
     }
 
-    // GET /api/products/{id} (CUSTOMER & STAFF)
+    // 4. Get By ID
     @GetMapping("/{id}")
-    @PreAuthorize("permitAll()")
-    public ProductResponse getProductById(@PathVariable Long id) {
-        return productService.getProductById(id);
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    // STAFF ONLY
+    // 5. Update
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('STAFF')")
-    public ProductResponse updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-        return productService.updateProduct(id, request);
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
-    // DELETE - STAFF only
+    // 6. Deactivate
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('STAFF')")
-    public void deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Void> deactivateProduct(@PathVariable Long id) {
         productService.deactivateProduct(id);
+        return ResponseEntity.noContent().build();
     }
 
-    // Upload Image
-    @PostMapping("/{id}/image")
-    @PreAuthorize("hasRole('STAFF')")
-    public ProductResponse uploadImage(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-        return productService.uploadImage(id, file);
+    // 7. Upload Image
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Product> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(productService.uploadImage(id, file));
     }
 }

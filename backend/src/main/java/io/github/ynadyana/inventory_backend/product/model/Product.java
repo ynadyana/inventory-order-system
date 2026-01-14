@@ -1,5 +1,6 @@
 package io.github.ynadyana.inventory_backend.product.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,26 +36,23 @@ public class Product {
 
     private String imageUrl;
 
-    
-
     @Column(nullable = false)
     private BigDecimal price;
 
     private boolean active;
-    
-    private Integer totalStock;
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ProductVariant> variants = new ArrayList<>();
-    
-   
-    private Integer stock;
 
+    // Calculated Getter for total stock
+    @Transient 
     public Integer getTotalStock() {
         if (variants == null || variants.isEmpty()) {
-            return totalStock; 
+            return 0; 
         }
-        return variants.stream().mapToInt(ProductVariant::getStock).sum();
+        return variants.stream().mapToInt(v -> v.getStock() == null ? 0 : v.getStock()).sum();
     }
 
     @CreationTimestamp

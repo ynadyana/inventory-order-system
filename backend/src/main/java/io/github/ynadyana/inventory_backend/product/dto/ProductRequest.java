@@ -1,37 +1,39 @@
-// src/main/java/io/github/ynadyana/inventory_backend/product/dto/ProductRequest.java
-
 package io.github.ynadyana.inventory_backend.product.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Data; // <--- This is crucial
 import java.math.BigDecimal;
 import java.util.List;
 
+@Data // <--- Ensures getters like getSku(), getName() exist
+public class ProductRequest {
 
-public record ProductRequest(
     @NotBlank(message = "SKU is required")
-    String sku,
+    private String sku;
 
     @NotBlank(message = "Name is required")
-    String name,
+    private String name;
 
-    String description,
+    private String description;
 
     @NotBlank(message = "Category is required")
-    String category,
+    private String category;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than zero")
-    BigDecimal price,
+    private BigDecimal price;
 
-     List<VariantDto> variants
-) {
+    private String imageUrl;
+
+    private List<VariantDto> variants;
+
     @Data
     public static class VariantDto {
         private String colorName;
         private String colorHex;
-        private Integer stock; 
+        private Integer stock;
+        private String imageUrl;
     }
- }
+}

@@ -24,6 +24,8 @@ public class OrderItem {
     @Column(name = "product_id")
     private Long productId;
 
+    private String variantName;
+
  
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)

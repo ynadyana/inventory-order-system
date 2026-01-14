@@ -1,13 +1,14 @@
 package io.github.ynadyana.inventory_backend.order.service;
 
-import io.github.ynadyana.inventory_backend.inventory.InventoryService;
 import io.github.ynadyana.inventory_backend.order.dto.OrderRequest;
 import io.github.ynadyana.inventory_backend.order.model.Order;
 import io.github.ynadyana.inventory_backend.order.model.OrderItem;
 import io.github.ynadyana.inventory_backend.order.model.OrderStatus;
 import io.github.ynadyana.inventory_backend.order.repository.OrderRepository;
 import io.github.ynadyana.inventory_backend.product.model.Product;
-import io.github.ynadyana.inventory_backend.product.repository.ProductRepository; 
+import io.github.ynadyana.inventory_backend.product.model.ProductVariant;
+import io.github.ynadyana.inventory_backend.product.repository.ProductRepository;
+import io.github.ynadyana.inventory_backend.product.repository.ProductVariantRepository; // Correct Import
 import io.github.ynadyana.inventory_backend.user.AppUser;
 import io.github.ynadyana.inventory_backend.user.Role;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,9 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository; 
-    private final InventoryService inventoryService; 
-    // EmailService removed!
+    private final ProductRepository productRepository;
+    // REMOVED: private final InventoryService inventoryService; 
+    private final ProductVariantRepository productVariantRepository; // Added this
 
     @Transactional
     public Order placeOrder(AppUser user, OrderRequest request) {
@@ -41,15 +42,33 @@ public class OrderService {
         List<OrderItem> items = new ArrayList<>();
 
         for (var itemRequest : request.getItems()) {
-            Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            
+            // 1. Determine Variant Name
+            String rawVariant = itemRequest.getVariantName();
+            final String variantName = (rawVariant == null || rawVariant.trim().isEmpty()) 
+                                       ? "Standard" 
+                                       : rawVariant;
 
-            // Deduct Stock
-            inventoryService.reduceStock(product.getId(), itemRequest.getQuantity());
+            // 2. Find the SPECIFIC Variant
+            ProductVariant variant = productVariantRepository.findByProductIdAndColorName(
+                itemRequest.getProductId(), 
+                variantName
+            ).orElseThrow(() -> new RuntimeException("Product Variant not found: " + variantName));
 
+            // 3. Check Stock
+            if (variant.getStock() < itemRequest.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for: " + variant.getProduct().getName() + " (" + variantName + ")");
+            }
+
+            // 4. Deduct Stock
+            variant.setStock(variant.getStock() - itemRequest.getQuantity());
+            productVariantRepository.save(variant);
+
+            // 5. Create Order Item
             OrderItem orderItem = OrderItem.builder()
                     .productId(itemRequest.getProductId())
-                    .product(product) 
+                    .product(variant.getProduct())
+                    .variantName(variantName) // Ensure OrderItem has this field
                     .quantity(itemRequest.getQuantity())
                     .price(itemRequest.getPrice())
                     .order(order)

@@ -19,15 +19,35 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product) => {
     setCart((prev) => {
-      const existing = prev.find(item => item.id === product.id && item.selectedVariant === product.selectedVariant);
+      // 1. Normalize the variant. If none selected, assume "Standard"
+      const variantName = product.selectedVariant?.colorName || "Standard"; 
+      
+      const existing = prev.find(item => {
+         const itemVariant = item.selectedVariant?.colorName || "Standard";
+         return item.id === product.id && itemVariant === variantName;
+      });
+
       if (existing) {
-        return prev.map(item => 
-          (item.id === product.id && item.selectedVariant === product.selectedVariant)
-          ? { ...item, quantity: item.quantity + (product.quantity || 1) } 
-          : item
-        );
+        return prev.map(item => {
+          const itemVariant = item.selectedVariant?.colorName || "Standard";
+          if (item.id === product.id && itemVariant === variantName) {
+             return { ...item, quantity: item.quantity + (product.quantity || 1) };
+          }
+          return item;
+        });
       }
-      return [...prev, { ...product, quantity: product.quantity || 1 }];
+      
+      // 2. Prepare item for cart with safe defaults
+      const itemToAdd = {
+          ...product,
+          selectedVariant: product.selectedVariant || { 
+              colorName: "Standard", 
+              imageUrl: product.imageUrl,
+              stock: product.totalStock // fallback
+          }
+      };
+      
+      return [...prev, { ...itemToAdd, quantity: product.quantity || 1 }];
     });
     showToast(product);
   };

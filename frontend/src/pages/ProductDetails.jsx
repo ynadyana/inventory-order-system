@@ -118,7 +118,7 @@ const ProductDetails = () => {
               {/* Main Image with transition */}
               <div className="w-full h-full flex items-center justify-center p-8">
                  <img 
-                  key={currentSlide} // Key forces re-render for animation
+                  key={currentSlide} 
                   src={getFullUrl(gallery[currentSlide])} 
                   alt="Product View" 
                   className={`w-full h-full object-contain mix-blend-multiply transition-all duration-500 animate-in fade-in zoom-in-95 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
@@ -250,13 +250,13 @@ const ProductDetails = () => {
                 onClick={() => toggleWishlist(product)}
                 className={`h-14 w-14 border rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-90
                 ${isInWishlist(product.id) 
-                 ? 'bg-red-50 border-red-200 text-red-500' // Style when Active (Loved)
-                 : 'border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-red-500' // Style when Inactive
+                 ? 'bg-red-50 border-red-200 text-red-500'
+                 : 'border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-red-500' 
                 }`}
                 >
                     <Heart 
                         size={24} 
-                        fill={isInWishlist(product.id) ? "currentColor" : "none"} // Fills the heart with color if active
+                        fill={isInWishlist(product.id) ? "currentColor" : "none"} 
                     />
                 </button>
             </div>
