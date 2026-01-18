@@ -29,12 +29,22 @@ public class AuthService {
         user.setEmail(req.email());
         user.setPassword(passwordEncoder.encode(req.password()));
         user.setRole(Role.CUSTOMER);
+        
+
+        String derivedUsername = req.email().split("@")[0];
+        user.setUsername(derivedUsername);
 
         userRepository.save(user);
 
-
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user.getEmail(), user.getRole().name());
+        
+        // Return username in response 
+        return new AuthResponse(
+            token, 
+            user.getEmail(), 
+            user.getRole().name(),
+            user.getUsername() 
+        );
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -46,6 +56,13 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user.getEmail(), user.getRole().name());
+        
+        // Return username in response
+        return new AuthResponse(
+            token, 
+            user.getEmail(), 
+            user.getRole().name(),
+            user.getUsername() 
+        );
     }
 }
