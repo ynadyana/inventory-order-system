@@ -11,9 +11,10 @@ const ManageOrders = () => {
     const navigate = useNavigate();
 
     const [orders, setOrders] = useState([]);
+    const [products, setProducts] = useState({}); // Store products map
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalRevenue: 0, pendingCount: 0, todaysOrders: 0 });
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // <--- NEW STATE
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     
     // -SEARCH & FILTER
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,16 +28,28 @@ const ManageOrders = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => { fetchOrders(); }, []);
+    useEffect(() => { fetchData(); }, []);
 
-    const fetchOrders = async () => {
+    const fetchData = async () => {
         try {
-            const res = await api.get('/orders');
-            const data = Array.isArray(res.data) ? res.data : (res.data.content || []);
-            setOrders(data);
-            calculateStats(data);
+            // Fetch Orders AND Products
+            const [orderRes, productRes] = await Promise.all([
+                api.get('/orders'),
+                api.get('/products')
+            ]);
+
+            const orderData = Array.isArray(orderRes.data) ? orderRes.data : (orderRes.data.content || []);
+            const productData = Array.isArray(productRes.data) ? productRes.data : (productRes.data.content || []);
+
+            // Create a Map of ID -> Product 
+            const productMap = {};
+            productData.forEach(p => productMap[p.id] = p);
+
+            setOrders(orderData);
+            setProducts(productMap);
+            calculateStats(orderData);
         } catch (error) {
-            console.error("Failed to fetch orders", error);
+            console.error("Failed to fetch data", error);
         } finally {
             setLoading(false);
         }
@@ -59,7 +72,7 @@ const ManageOrders = () => {
             ));
         } catch (error) {
             console.error("Status update failed", error);
-            alert("Failed to update status. Check console for details.");
+            alert("Failed to update status.");
         }
     };
 
@@ -78,7 +91,7 @@ const ManageOrders = () => {
         .filter(order => {
             const matchesSearch = 
                 String(order.id).includes(searchTerm) || 
-                (order.user && order.user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+                (order.userEmail && order.userEmail.toLowerCase().includes(searchTerm.toLowerCase()));
             
             const matchesStatus = filters.status.length === 0 || filters.status.includes(order.status);
             
@@ -101,6 +114,8 @@ const ManageOrders = () => {
         navigate('/login'); 
         window.location.reload(); 
     };
+
+    const getImageUrl = (path) => path ? `http://localhost:8080/${path}` : null;
 
     const getStatusStyles = (status) => {
         switch (status) {
@@ -150,7 +165,7 @@ const ManageOrders = () => {
                     <div className="flex items-center gap-3">
                         <div className="relative w-full max-w-sm">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input type="text" placeholder="Search Order ID or Customer..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none" />
+                            <input type="text" placeholder="Search Order ID or Email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none" />
                         </div>
 
                         {/* -- FILTER DROPDOWN -- */}
@@ -184,19 +199,6 @@ const ManageOrders = () => {
                                             </div>
                                         </div>
 
-                                        {/* ID Sort */}
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase mb-2.5">Order ID</p>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => setFilters({...filters, idSort: 'asc', dateSort: null})} className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg border transition ${filters.idSort === 'asc' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                                                    <ArrowUp className="w-3 h-3" /> Asc
-                                                </button>
-                                                <button onClick={() => setFilters({...filters, idSort: 'desc', dateSort: null})} className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg border transition ${filters.idSort === 'desc' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                                                    <ArrowDown className="w-3 h-3" /> Desc
-                                                </button>
-                                            </div>
-                                        </div>
-
                                         <button onClick={() => { setFilters({ status: [], dateSort: 'latest', idSort: null }); setShowFilterMenu(false); }} className="w-full text-xs text-red-600 hover:text-red-700 font-bold hover:underline pt-2 border-t border-slate-100">Reset All Filters</button>
                                     </div>
                                 </div>
@@ -205,8 +207,6 @@ const ManageOrders = () => {
                     </div>
 
                     <div className="flex items-center gap-5">
-                        <button className="relative text-slate-400 hover:text-slate-600 transition"><Bell className="w-5 h-5" /><span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span></button>
-                        <div className="h-6 w-px bg-slate-200"></div>
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden md:block"><p className="text-sm font-semibold text-slate-700 leading-none">Admin User</p><p className="text-xs text-slate-500 mt-1">Super Admin</p></div>
                             <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold border border-blue-200"><User className="w-4 h-4" /></div>
@@ -259,8 +259,8 @@ const ManageOrders = () => {
                                                     <td className="p-4 pl-6 font-mono font-medium text-slate-700">#{order.id}</td>
                                                     <td className="p-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">{(order.user?.username || 'U').charAt(0).toUpperCase()}</div>
-                                                            <div><p className="font-semibold text-slate-700">{order.user?.username || "Guest"}</p><p className="text-[10px] text-slate-400">{order.user?.email}</p></div>
+                                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">{(order.userEmail || 'U').charAt(0).toUpperCase()}</div>
+                                                            <div><p className="font-semibold text-slate-700">{order.userEmail || "Guest"}</p></div>
                                                         </div>
                                                     </td>
                                                     <td className="p-4 text-slate-500">{new Date(order.orderDate).toLocaleDateString()}</td>
@@ -293,7 +293,7 @@ const ManageOrders = () => {
                 </div>
             </main>
 
-            {/* -- ORDER DETAILS -- */}
+            {/* -- ORDER DETAILS MODAL -- */}
             {isModalOpen && selectedOrder && (
                 <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
@@ -305,7 +305,7 @@ const ManageOrders = () => {
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6 flex justify-between items-center">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 border border-blue-100"><User className="w-6 h-6" /></div>
-                                    <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Customer</p><p className="font-bold text-slate-800 text-sm">{selectedOrder.user?.username || "Guest User"}</p><p className="text-xs text-slate-500">{selectedOrder.user?.email}</p></div>
+                                    <div><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Customer</p><p className="font-bold text-slate-800 text-sm">{selectedOrder.userEmail || "Guest User"}</p></div>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Status</p>
@@ -315,15 +315,22 @@ const ManageOrders = () => {
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-2"><Package className="w-4 h-4 text-slate-400" /> Order Items</h4></div>
                                 <div className="divide-y divide-slate-50">
-                                    {selectedOrder.items.map((item, index) => (
-                                        <div key={index} className="flex gap-4 p-5 items-center hover:bg-slate-50/50 transition">
-                                            <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                {item.product && getImageUrl(item.product.imageUrl) ? <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} className="w-full h-full object-cover" /> : <Package className="w-6 h-6 text-slate-300" />}
+                                    {selectedOrder.items.map((item, index) => {
+                                        // Lookup Product for Image/Category details
+                                        const product = products[item.productId] || {};
+                                        return (
+                                            <div key={index} className="flex gap-4 p-5 items-center hover:bg-slate-50/50 transition">
+                                                <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                    {getImageUrl(product.imageUrl) ? <img src={getImageUrl(product.imageUrl)} alt={item.productName} className="w-full h-full object-cover" /> : <Package className="w-6 h-6 text-slate-300" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h5 className="font-bold text-slate-800 text-sm">{item.productName || `Product ID: ${item.productId}`}</h5>
+                                                    <p className="text-xs text-slate-500 mt-0.5">{product.category || item.variantName || "General Item"}</p>
+                                                </div>
+                                                <div className="text-right"><div className="text-xs text-slate-500 mb-0.5">Qty: <span className="font-bold text-slate-800">{item.quantity}</span></div><div className="font-bold text-blue-600 text-sm">RM {(item.price || 0).toLocaleString()}</div></div>
                                             </div>
-                                            <div className="flex-1"><h5 className="font-bold text-slate-800 text-sm">{item.product ? item.product.name : `Product ID: ${item.productId}`}</h5><p className="text-xs text-slate-500 mt-0.5">{item.product?.category || "General Item"}</p></div>
-                                            <div className="text-right"><div className="text-xs text-slate-500 mb-0.5">Qty: <span className="font-bold text-slate-800">{item.quantity}</span></div><div className="font-bold text-blue-600 text-sm">RM {(item.price || 0).toLocaleString()}</div></div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                                 <div className="bg-slate-50 p-5 flex justify-end border-t border-slate-100"><div className="text-right"><p className="text-slate-500 text-xs font-medium uppercase tracking-wide">Total Amount</p><p className="text-2xl font-extrabold text-slate-900 mt-1">RM {selectedOrder.totalAmount.toLocaleString()}</p></div></div>
                             </div>
@@ -333,14 +340,12 @@ const ManageOrders = () => {
                 </div>
             )}
 
-            {/* --- CONFIRM LOGOUT  --- */}
+            {/* --- CONFIRM LOGOUT --- */}
             {showLogoutConfirm && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[70] p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-100 transition-all">
                         <div className="p-6 text-center">
-                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <LogOut className="w-6 h-6 text-red-600" />
-                            </div>
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><LogOut className="w-6 h-6 text-red-600" /></div>
                             <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
                             <p className="text-sm text-slate-500 mb-6">Are you sure you want to end your session?</p>
                             <div className="flex gap-3">
