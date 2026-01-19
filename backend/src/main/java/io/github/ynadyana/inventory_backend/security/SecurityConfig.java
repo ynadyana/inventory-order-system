@@ -9,11 +9,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -36,21 +36,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Activate the CORS configuration defined below
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // 2. Public Access Rules
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll() 
-                .requestMatchers("/api/health/**").permitAll()
+                // 1. Allow Pre-flight requests (CORS)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
 
-                // Allow any logged-in user to place orders and view history
-                .requestMatchers("/api/orders/**").authenticated()
+                // 2. Public Authentication Endpoints
+                .requestMatchers("/api/auth/**").permitAll()
                 
-                // 3. Authenticated Access Rules (Catch-all)
+                // 3. Public Product Endpoints (NO AUTHENTICATION REQUIRED)
+                .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/categories").permitAll()
+
+                // 4. Public Static Files & Images
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/images/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.webp", "/**/*.svg").permitAll()
+
+                // 5. Protected Endpoints (AUTHENTICATION REQUIRED)
+                .requestMatchers("/api/orders/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
+                
+                // 6. All other requests require authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -60,15 +71,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // --- BEAN TO MANAGE CORS POLICY ---
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow your React Frontend
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Allow the headers your app uses (including JWT Authorization)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Origin", "Accept"));
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

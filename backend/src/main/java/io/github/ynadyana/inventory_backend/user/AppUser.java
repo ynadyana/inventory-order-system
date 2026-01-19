@@ -1,13 +1,22 @@
 package io.github.ynadyana.inventory_backend.user;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class AppUser implements UserDetails {
@@ -22,33 +31,36 @@ public class AppUser implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "username")
+    private String username;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    // ===== getters/setters =====
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
     @Override
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
-
-    // ===== UserDetails =====
-    @Override
-    public String getUsername() {
-        return email; // Spring Security uses this as the login identifier
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Safety check to prevent NullPointerException
+        if (role == null) {
+            return Collections.emptyList();
+        }
+        // This creates "ROLE_STAFF" or "ROLE_CUSTOMER"
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email; // Login matches email, not name
+    }
+
+    // Helper to get the display name
+    public String getRealUsername() {
+        return username;
     }
 
     @Override public boolean isAccountNonExpired() { return true; }

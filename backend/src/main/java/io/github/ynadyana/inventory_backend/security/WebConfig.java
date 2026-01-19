@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true);
     }
 
-    // --- CRITICAL: THIS MAKES THE IMAGES VISIBLE ---
+    // Makes the image visible
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // "uploads" folder in project root becomes accessible at /uploads/...
