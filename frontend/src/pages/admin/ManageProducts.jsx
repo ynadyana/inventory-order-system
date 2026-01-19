@@ -4,7 +4,7 @@ import api from '../../lib/axios';
 import { 
     LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Trash2, Edit, 
     X, Image as ImageIcon, Search, Filter, User, ChevronDown, Layers, 
-    AlertTriangle, CheckCircle, XCircle, Check, ArrowRight, Minus
+    AlertTriangle, CheckCircle, XCircle, Check, ArrowRight, Minus, Upload
 } from 'lucide-react';
 
 const ManageProducts = () => {
@@ -42,7 +42,16 @@ const ManageProducts = () => {
     });
 
     const [variantForm, setVariantForm] = useState({
-        id: null, colorName: '', colorValue: '#000000', storage: '', price: '', stock: 0, sku: '', image: null
+        id: null, 
+        colorName: '', 
+        colorValue: '#000000', 
+        storage: '', 
+        price: '', 
+        stock: 0, 
+        sku: '', 
+        image: null, 
+        album: [], 
+        existingAlbum: [] 
     });
 
     const [stockAdjustment, setStockAdjustment] = useState(0);
@@ -192,7 +201,7 @@ const ManageProducts = () => {
     // --- VARIANT ACTIONS ---
     const openAddVariantModal = (productId) => {
         setCurrentProductId(productId);
-        setVariantForm({ id: null, colorName: '', colorValue: '#000000', storage: '', price: '', stock: 0, sku: '', image: null });
+        setVariantForm({ id: null, colorName: '', colorValue: '#000000', storage: '', price: '', stock: 0, sku: '', image: null, album: [], existingAlbum: [] });
         setEnableColor(false); setEnableStorage(false); setIsVariantModalOpen(true);
     };
 
@@ -200,8 +209,22 @@ const ManageProducts = () => {
         setCurrentProductId(productId);
         const safeColor = variant.colorName === "Standard" ? "" : (variant.colorName || "");
         const safeStorage = variant.storage === "Standard" ? "" : (variant.storage || "");
-        setVariantForm({ id: variant.id, colorName: safeColor, colorValue: variant.colorHex || '#000000', storage: safeStorage, price: variant.price || '', stock: variant.stock, sku: variant.sku || '', image: null });
-        setEnableColor(!!safeColor); setEnableStorage(!!safeStorage); setIsVariantModalOpen(true);
+        
+        setVariantForm({ 
+            id: variant.id, 
+            colorName: safeColor, 
+            colorValue: variant.colorHex || '#000000', 
+            storage: safeStorage, 
+            price: variant.price || '', 
+            stock: variant.stock, 
+            sku: variant.sku || '', 
+            image: null,
+            album: [], 
+            existingAlbum: variant.albumImages || [] 
+        });
+        setEnableColor(!!safeColor); 
+        setEnableStorage(!!safeStorage); 
+        setIsVariantModalOpen(true);
     };
 
     const handleVariantSubmit = async (e) => {
@@ -213,18 +236,36 @@ const ManageProducts = () => {
                 storage: enableStorage ? variantForm.storage : null,
                 price: variantForm.price ? Number(variantForm.price) : null,
                 stock: Number(variantForm.stock),
-                sku: variantForm.sku
+                sku: variantForm.sku,
+                albumImages: variantForm.existingAlbum 
             };
+            
             const formData = new FormData();
             formData.append('data', new Blob([JSON.stringify(variantData)], { type: 'application/json' }));
+            
             if (variantForm.image) formData.append('image', variantForm.image);
-            if (variantForm.id) { await api.put(`/variants/${variantForm.id}`, variantData); } 
-            else { await api.post(`/products/${currentProductId}/variants`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }); }
+            
+            if (variantForm.album && variantForm.album.length > 0) {
+                Array.from(variantForm.album).forEach(file => {
+                    formData.append('albumImages', file);
+                });
+            }
+
+            if (variantForm.id) { 
+                await api.put(`/variants/${variantForm.id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }); 
+            } else { 
+                await api.post(`/products/${currentProductId}/variants`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }); 
+            }
+            
             showNotification('success', "Variant saved successfully!");
             setIsVariantModalOpen(false);
             fetchProducts(); 
-        } catch (error) { showNotification('error', "Failed to save variant."); }
-        finally { setIsSubmitting(false); }
+        } catch (error) { 
+            console.error(error);
+            showNotification('error', "Failed to save variant."); 
+        } finally { 
+            setIsSubmitting(false); 
+        }
     };
 
     const confirmStockUpdate = async () => {
@@ -246,7 +287,7 @@ const ManageProducts = () => {
     // --- DELETE HANDLERS ---
     const handleDeleteProduct = (id) => {
         setConfirmModal({
-            show: true, title: "Delete Product?", message: "This will permanently delete the product and all its variants. This action cannot be undone.",
+            show: true, title: "Delete Product?", message: "This will permanently delete the product and all its variants.",
             onConfirm: async () => {
                 setIsSubmitting(true);
                 try {
@@ -261,7 +302,7 @@ const ManageProducts = () => {
 
     const handleDeleteVariant = (vid, pid) => {
         setConfirmModal({
-            show: true, title: "Delete Variant?", message: "Are you sure you want to delete this variant? The total stock will be recalculated.",
+            show: true, title: "Delete Variant?", message: "Are you sure you want to delete this variant?",
             onConfirm: async () => {
                 setIsSubmitting(true);
                 try {
@@ -274,11 +315,10 @@ const ManageProducts = () => {
         });
     };
 
-    // --- UI HELPERS & LOGOUT ---
-    const openStockModal = () => { setStockAdjustment(0); setIsStockModalOpen(true); };
     const handleProductInputChange = (e) => setProductForm({ ...productForm, [e.target.name]: e.target.value });
     const handleLogout = () => setShowLogoutConfirm(true); 
     const confirmLogout = () => { localStorage.clear(); navigate('/login'); window.location.reload(); };
+    const openStockModal = () => { setStockAdjustment(0); setIsStockModalOpen(true); };
 
     // Styles
     const inputBaseClasses = "w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed";
@@ -522,13 +562,84 @@ const ManageProducts = () => {
                 {/* --- VARIANT FORM MODAL --- */}
                 {isVariantModalOpen && (
                     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
-                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
                                 <h3 className="text-lg font-bold text-slate-900">{variantForm.id ? "Edit Variant" : "Add New Variant"}</h3>
                                 <button onClick={() => setIsVariantModalOpen(false)} className="p-1 rounded-full hover:bg-slate-100"><X className="w-5 h-5 text-slate-500" /></button>
                             </div>
                             <form onSubmit={handleVariantSubmit} className="p-6 space-y-5">
-                                <div><label className={labelClasses}>Variant Image (Optional)</label><input type="file" className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onChange={e => setVariantForm({...variantForm, image: e.target.files[0]})} /></div>
+                                
+                                {/* 1. Main Variant Image */}
+                                <div>
+                                    <label className={labelClasses}>Main Image</label>
+                                    <input type="file" className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onChange={e => setVariantForm({...variantForm, image: e.target.files[0]})} />
+                                </div>
+
+                                {/* 2. Gallery Images (Album) */}
+                                <div>
+                                    <label className={labelClasses}>Gallery Images (Album)</label>
+                                    
+                                    {/* EXISTING IMAGES (From Database) */}
+                                    {variantForm.existingAlbum.length > 0 && (
+                                        <div className="mb-3">
+                                            <p className="text-[10px] text-slate-400 font-bold mb-2 uppercase">Existing Images</p>
+                                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                                {variantForm.existingAlbum.map((imgUrl, idx) => (
+                                                    <div key={idx} className="relative w-16 h-16 flex-shrink-0 border rounded-lg overflow-hidden group">
+                                                        <img src={getImageUrl(imgUrl)} className="w-full h-full object-cover" alt="Existing" />
+                                                        {/* DELETE BUTTON */}
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setVariantForm({
+                                                                ...variantForm, 
+                                                                existingAlbum: variantForm.existingAlbum.filter((_, i) => i !== idx)
+                                                            })} 
+                                                            className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* UPLOAD NEW IMAGES */}
+                                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer relative bg-slate-50/50">
+                                        <input 
+                                            type="file" 
+                                            multiple 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={e => setVariantForm({...variantForm, album: [...variantForm.album, ...Array.from(e.target.files)]})} 
+                                        />
+                                        <div className="flex flex-col items-center justify-center text-slate-400">
+                                            <Upload className="w-8 h-8 mb-2 text-slate-300" />
+                                            <span className="text-xs font-bold">Click to upload multiple images</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Preview NEW Selected Album Images */}
+                                    {variantForm.album.length > 0 && (
+                                        <div className="mt-3">
+                                            <p className="text-[10px] text-blue-500 font-bold mb-2 uppercase">New Uploads</p>
+                                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                                {variantForm.album.map((file, idx) => (
+                                                    <div key={idx} className="relative w-16 h-16 flex-shrink-0 border rounded-lg overflow-hidden group border-blue-200">
+                                                        <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-80" alt="Preview" />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setVariantForm({...variantForm, album: variantForm.album.filter((_, i) => i !== idx)})} 
+                                                            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="flex gap-4 border-b border-slate-100 pb-4">
                                     <label className="flex items-center gap-2 cursor-pointer group"><div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${enableColor ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>{enableColor && <Check className="w-3.5 h-3.5 text-white" />}</div><span className="text-sm font-semibold text-slate-700">Color</span><input type="checkbox" className="hidden" checked={enableColor} onChange={(e) => setEnableColor(e.target.checked)} /></label>
                                     <label className="flex items-center gap-2 cursor-pointer group"><div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${enableStorage ? 'bg-blue-600 border-blue-600' : 'border-slate-300'}`}>{enableStorage && <Check className="w-3.5 h-3.5 text-white" />}</div><span className="text-sm font-semibold text-slate-700">Storage</span><input type="checkbox" className="hidden" checked={enableStorage} onChange={(e) => setEnableStorage(e.target.checked)} /></label>
@@ -542,15 +653,75 @@ const ManageProducts = () => {
                     </div>
                 )}
 
-                {/* --- STOCK ADJUSTMENT MODAL --- */}
+                {/* --- STOCK ADJUSTMENT MODAL  --- */}
                 {isStockModalOpen && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in">
-                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-                            <h3 className="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-4 text-center">Adjust Stock Level</h3>
-                            <div className="flex justify-around items-center mb-8"><div className="text-center"><p className="text-xs text-slate-400 font-bold uppercase tracking-wide">Current</p><p className="text-3xl font-extrabold text-slate-700">{variantForm.stock}</p></div><ArrowRight className="text-slate-300 w-6 h-6" /><div className="text-center"><p className="text-xs text-blue-600 font-bold uppercase tracking-wide">New Total</p><p className="text-3xl font-extrabold text-blue-600">{Number(variantForm.stock) + stockAdjustment}</p></div></div>
-                            <div className="flex gap-4 mb-6"><button onClick={() => setStockAdjustment(s => s - 1)} className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition active:scale-95"><Minus className="w-5 h-5 text-slate-600" /></button><input type="number" value={stockAdjustment} onChange={e => setStockAdjustment(Number(e.target.value))} className="flex-1 text-center text-xl font-bold border-b-2 border-slate-200 focus:border-blue-500 outline-none transition-colors" /><button onClick={() => setStockAdjustment(s => s + 1)} className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition active:scale-95"><Plus className="w-5 h-5 text-slate-600" /></button></div>
-                            <button onClick={confirmStockUpdate} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 active:scale-[0.98]" disabled={isSubmitting}>{isSubmitting ? "Updating..." : "Confirm Adjustment"}</button>
-                            <button onClick={() => setIsStockModalOpen(false)} className="w-full mt-3 py-2 text-slate-500 text-sm font-bold hover:text-slate-800 transition" disabled={isSubmitting}>Cancel</button>
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+                            {/* Header */}
+                            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-slate-900">Adjust Stock</h3>
+                                <button onClick={() => setIsStockModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition"><X className="w-5 h-5" /></button>
+                            </div>
+                            
+                            <div className="p-6">
+                                {/* Visual Calculation */}
+                                <div className="flex items-center justify-between mb-8 px-2">
+                                    <div className="text-center">
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wide mb-1">Current</p>
+                                        <p className="text-3xl font-extrabold text-slate-700">{variantForm.stock}</p>
+                                    </div>
+                                    
+                                    {/* Arrow & Adjustment Indicator */}
+                                    <div className="flex flex-col items-center">
+                                        <ArrowRight className="text-slate-300 w-5 h-5 mb-1" />
+                                        <span className={`text-xs font-bold ${stockAdjustment > 0 ? 'text-emerald-600' : stockAdjustment < 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                                            {stockAdjustment > 0 ? '+' : ''}{stockAdjustment}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-center">
+                                        <p className="text-xs text-blue-600 font-bold uppercase tracking-wide mb-1">New Total</p>
+                                        <p className={`text-3xl font-extrabold ${Number(variantForm.stock) + stockAdjustment < 0 ? 'text-red-500' : 'text-blue-600'}`}>
+                                            {Number(variantForm.stock) + stockAdjustment}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Counter Control */}
+                                <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-2 border border-slate-200 mb-6">
+                                    <button 
+                                        onClick={() => setStockAdjustment(s => s - 1)} 
+                                        className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600 hover:text-red-600 hover:border-red-100 transition active:scale-95"
+                                    >
+                                        <Minus className="w-5 h-5" />
+                                    </button>
+                                    
+                                    <input 
+                                        type="number" 
+                                        value={stockAdjustment} 
+                                        onChange={e => setStockAdjustment(Number(e.target.value))} 
+                                        className="flex-1 bg-transparent text-center text-2xl font-bold text-slate-800 outline-none w-20"
+                                    />
+                                    
+                                    <button 
+                                        onClick={() => setStockAdjustment(s => s + 1)} 
+                                        className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600 hover:text-emerald-600 hover:border-emerald-100 transition active:scale-95"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={confirmStockUpdate} 
+                                        disabled={isSubmitting || (Number(variantForm.stock) + stockAdjustment) < 0}
+                                        className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? "Updating..." : "Confirm Adjustment"}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

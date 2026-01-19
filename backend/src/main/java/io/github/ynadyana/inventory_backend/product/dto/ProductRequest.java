@@ -42,5 +42,6 @@ public class ProductRequest {
         private BigDecimal price;
         private String sku;
         private String brand;
+        private List<String> albumImages;
     }
 }

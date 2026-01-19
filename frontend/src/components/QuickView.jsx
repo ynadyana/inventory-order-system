@@ -1,4 +1,4 @@
-import { X, Minus, Plus, Heart, ShoppingCart } from 'lucide-react';
+import { X, Minus, Plus, Heart, ShoppingCart, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 
@@ -10,15 +10,24 @@ const QuickView = ({ product, onClose }) => {
   const [hoveredImage, setHoveredImage] = useState(null);
 
   const variants = product.variants || product.colors || [];
-  // --- LOGIC: DETERMINE STOCK ---
-  // If a color is selected, use that color's stock. Otherwise, use total product stock.
+
+  // --- INITIALIZE VARIANT ---
+  useEffect(() => {
+    if (variants.length > 0) {
+      // Try to find the first variant that HAS stock to be the default
+      const firstInStock = variants.find(v => v.stock > 0);
+      setSelectedVariant(firstInStock || variants[0]);
+    }
+  }, [product]);
+
+
   const currentStock = selectedVariant ? selectedVariant.stock : (product.totalStock || product.stock || 0);
   const isOutOfStock = currentStock <= 0;
 
   // Reset quantity if stock changes 
   useEffect(() => {
     if (qty > currentStock && currentStock > 0) {
-        setQty(currentStock);
+      setQty(currentStock);
     }
   }, [currentStock, qty]);
 
@@ -30,8 +39,8 @@ const QuickView = ({ product, onClose }) => {
   const currentImage = hoveredImage || (selectedVariant ? selectedVariant.imageUrl : null) || product.imageUrl;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
         
         {/* Close Button */}
         <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 hover:text-red-500 transition-colors z-20">
@@ -40,15 +49,20 @@ const QuickView = ({ product, onClose }) => {
 
         {/* Left: Product Gallery */}
         <div className="w-full md:w-1/2 bg-[#f8f9fa] p-12 flex items-center justify-center relative group">
-          {/* Tag showing Status */}
-          {isOutOfStock && (
-             <span className="absolute top-6 left-6 bg-red-600 text-white text-xs font-bold px-3 py-1 uppercase tracking-widest shadow-sm">
-               {selectedVariant ? `${selectedVariant.colorName} Sold Out` : "Sold Out"}
+          {/* Badge showing Status */}
+          {isOutOfStock ? (
+             <span className="absolute top-6 left-6 bg-red-600 text-white text-xs font-bold px-3 py-1 uppercase tracking-widest shadow-sm rounded-sm">
+               Out of Stock
              </span>
-          )} 
+          ) : (
+             <span className="absolute top-6 left-6 bg-emerald-600 text-white text-xs font-bold px-3 py-1 uppercase tracking-widest shadow-sm rounded-sm">
+               In Stock
+             </span>
+          )}
+          
           <img 
             src={getFullUrl(currentImage)} 
-            className={`w-full h-auto object-contain mix-blend-multiply transition-all duration-500 transform group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+            className={`w-full h-auto max-h-[300px] object-contain mix-blend-multiply transition-all duration-500 transform group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
             alt={product.name} 
           />
         </div>
@@ -59,30 +73,35 @@ const QuickView = ({ product, onClose }) => {
             {product.name}
           </h2>
           
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-2xl font-bold text-cyan-600">RM{product.price.toLocaleString()}</span>
-            {/* Dynamic Stock Text */}
-            <span className={`text-sm font-bold px-2 py-1 rounded ${currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {currentStock > 0 ? `${currentStock} in stock` : 'Out of Stock'}
-            </span>
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-2xl font-bold text-slate-900">RM{product.price.toLocaleString()}</span>
+            
+            {/* HIDDEN STOCK COUNT - Just showing status */}
+            {isOutOfStock ? (
+                <span className="flex items-center gap-1 text-sm font-bold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-100">
+                    <AlertCircle className="w-3.5 h-3.5" /> Out of Stock
+                </span>
+            ) : (
+                <span className="flex items-center gap-1 text-sm font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
+                    <CheckCircle className="w-3.5 h-3.5" /> In Stock
+                </span>
+            )}
           </div>
 
           {/* COLORS SECTION */}
           {variants.length > 0 && (
             <div className="mb-8">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-3">
-                 Select Variant {selectedVariant && `- ${selectedVariant.colorName}`}
+                 Select Variant: <span className="text-black ml-1">{selectedVariant ? selectedVariant.colorName : 'None'}</span>
               </span>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 {variants.map((variant, index) => {
                   
                   const colorHex = typeof variant === 'string' 
                     ? variant 
                     : (variant.colorHex || variant.colorValue || '#000000');
 
-                  // 1. Check stock
-                  const isVariantSoldOut = variant.stock !== undefined && variant.stock <= 0;
-
+                  const isVariantSoldOut = variant.stock <= 0;
                   const isSelected = selectedVariant === variant;
 
                   return (
@@ -92,29 +111,29 @@ const QuickView = ({ product, onClose }) => {
                       onMouseEnter={() => setHoveredImage(variant.imageUrl)}
                       onMouseLeave={() => setHoveredImage(null)}
                       
-                      className={`w-8 h-8 rounded-full border shadow-sm transition-all duration-200 ${
+                      className={`w-10 h-10 rounded-full border shadow-sm transition-all duration-200 relative ${
                          isSelected 
                            ? 'ring-2 ring-offset-2 ring-gray-900 scale-110 border-transparent' 
                            : 'border-gray-200 hover:scale-110 hover:border-gray-400'
                       }`}
-                      style={{ 
-                        backgroundColor: colorHex,
-                        // 2. Diagonal line for out of stock
-                        backgroundImage: isVariantSoldOut 
-                          ? 'linear-gradient(to top right, transparent 48%, red 48%, red 52%, transparent 52%)' 
-                          : 'none',
-                        opacity: isVariantSoldOut ? 0.5 : 1
-                      }}
-                      title={`${variant.colorName || 'Color'} (${variant.stock} left)`} 
-                    />
+                      style={{ backgroundColor: colorHex }}
+                      title={`${variant.colorName || 'Color'} ${isVariantSoldOut ? '(Sold Out)' : ''}`} 
+                    >
+                        {/* Diagonal Line for Sold Out Variants */}
+                        {isVariantSoldOut && (
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                                <div className="w-[120%] h-[1px] bg-red-500/80 rotate-45 transform origin-center"></div>
+                            </div>
+                        )}
+                    </button>
                   );
                 })}
               </div>
             </div>
           )}
 
-          <p className="text-gray-600 text-sm leading-relaxed mb-8 border-t border-gray-100 pt-6">
-            {product.description || "Premium high-performance tech gear."}
+          <p className="text-gray-600 text-sm leading-relaxed mb-8 border-t border-gray-100 pt-6 line-clamp-3">
+            {product.description || "Experience premium quality with our latest tech collection."}
           </p>
 
           <div className="mt-auto space-y-6">
@@ -139,8 +158,8 @@ const QuickView = ({ product, onClose }) => {
                 }}
                 className={`flex-1 font-bold py-3 px-8 rounded-full flex items-center justify-center gap-2 transition-all transform shadow-lg
                     ${isOutOfStock 
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
-                        : 'bg-gray-900 hover:bg-black text-white active:scale-95'
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
+                        : 'bg-slate-900 hover:bg-black text-white active:scale-95 hover:shadow-xl'
                     }`}
               >
                 <ShoppingCart size={18} /> {isOutOfStock ? "SOLD OUT" : "ADD TO CART"}

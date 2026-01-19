@@ -118,9 +118,7 @@ const Navbar = () => {
                 </div>
             </div>
 
-            <button className="px-4 py-2 rounded-lg hover:bg-slate-50 transition-all duration-200 flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-blue-600 uppercase tracking-wide">
-                <MapPin className="w-4 h-4" /> Locations
-            </button>
+            
         </div>
 
         {/* RIGHT ICONS */}

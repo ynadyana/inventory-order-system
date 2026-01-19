@@ -9,30 +9,36 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ProductVariantController {
 
     private final ProductService productService;
 
-    // Accepts MultipartFile and passes it to service
+    // POST: Add Variant with Images
     @PostMapping(value = "/products/{productId}/variants", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductVariant> addVariant(
             @PathVariable Long productId,
             @RequestPart("data") ProductRequest.VariantDto request,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "albumImages", required = false) List<MultipartFile> albumImages) {
         
-        // Fixed the "formal argument lists differ" error
-        return ResponseEntity.ok(productService.addVariant(productId, request, image));
+        return ResponseEntity.ok(productService.addVariant(productId, request, image, albumImages));
     }
 
-    @PutMapping("/variants/{id}")
+    // PUT: Update Variant with Images accepts MultipartFile
+    @PutMapping(value = "/variants/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductVariant> updateVariant(
             @PathVariable Long id,
-            @RequestBody ProductRequest.VariantDto request) {
-        return ResponseEntity.ok(productService.updateVariant(id, request));
+            @RequestPart("data") ProductRequest.VariantDto request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "albumImages", required = false) List<MultipartFile> albumImages) {
+        
+        return ResponseEntity.ok(productService.updateVariant(id, request, image, albumImages));
     }
 
     @PutMapping("/variants/{id}/stock")

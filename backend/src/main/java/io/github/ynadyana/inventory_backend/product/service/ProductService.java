@@ -32,7 +32,7 @@ public class ProductService {
     private final ProductVariantRepository productVariantRepository;
     private final String UPLOAD_DIR = "uploads/";
 
-    // 1. Create Product (Complex with Variants)
+    // 1. Create Product
     @Transactional
     public Product createProduct(ProductRequest request) {
         Product product = Product.builder()
@@ -61,7 +61,6 @@ public class ProductService {
             }).collect(Collectors.toList());
             product.setVariants(variants);
         } else {
-            // Default "Simple Product" Logic
             ProductVariant standard = new ProductVariant();
             standard.setColorName(null); 
             standard.setStorage(null);   
@@ -75,7 +74,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    // 2. Create Product With Image (Used by Controller)
+    // 2. Create Product With Image
     @Transactional
     public Product createProductWithImage(String sku, String name, BigDecimal price, Integer stock, String category, String brand, MultipartFile image) {
         String imageUrl = null;
@@ -106,7 +105,7 @@ public class ProductService {
 
     // 3. Add Variant
     @Transactional
-    public ProductVariant addVariant(Long productId, ProductRequest.VariantDto dto, MultipartFile imageFile) {
+    public ProductVariant addVariant(Long productId, ProductRequest.VariantDto dto, MultipartFile imageFile, List<MultipartFile> albumImages) {
         Product product = getProductById(productId);
         ProductVariant v = new ProductVariant();
         v.setProduct(product);
@@ -121,20 +120,44 @@ public class ProductService {
             v.setImageUrl(saveImage(imageFile));
         }
 
+        if (albumImages != null && !albumImages.isEmpty()) {
+            List<String> urls = albumImages.stream().map(this::saveImage).collect(Collectors.toList());
+            v.setAlbumImages(urls);
+        }
+
         return productVariantRepository.save(v);
     }
 
     // 4. Update Variant
     @Transactional
-    public ProductVariant updateVariant(Long variantId, ProductRequest.VariantDto dto) {
+    public ProductVariant updateVariant(Long variantId, ProductRequest.VariantDto dto, MultipartFile imageFile, List<MultipartFile> albumImages) {
         ProductVariant v = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new RuntimeException("Variant not found"));
+        
         v.setColorName(dto.getColorName());
         v.setColorHex(dto.getColorHex());
         v.setStorage(dto.getStorage());
         v.setPrice(dto.getPrice());
         v.setSku(dto.getSku());
         v.setStock(dto.getStock());
+
+        // Update Main Image if provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            v.setImageUrl(saveImage(imageFile));
+        }
+
+        // Handle Album Images:
+        // 1. Keep existing images sent from frontend (handles deletions)
+        if (dto.getAlbumImages() != null) {
+            v.setAlbumImages(dto.getAlbumImages());
+        }
+
+        // 2. Append new uploads
+        if (albumImages != null && !albumImages.isEmpty()) {
+            List<String> newUrls = albumImages.stream().map(this::saveImage).collect(Collectors.toList());
+            v.getAlbumImages().addAll(newUrls);
+        }
+
         return productVariantRepository.save(v);
     }
 
@@ -155,12 +178,8 @@ public class ProductService {
     }
 
     // --- UTILS ---
-    
-    // 'Brand' filtering logic
     public Page<Product> getAllProducts(String search, String category, String brand, boolean activeOnly, Pageable pageable) {
         if (activeOnly) {
-            
-            // For simplicity, we prioritize filters in this order: Search > Brand > Category > All
             if (search != null && !search.isEmpty()) return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(search, pageable);
             if (brand != null && !brand.isEmpty()) return productRepository.findByBrandAndActiveTrue(brand, pageable); 
             if (category != null && !category.isEmpty()) return productRepository.findByCategoryAndActiveTrue(category, pageable);
