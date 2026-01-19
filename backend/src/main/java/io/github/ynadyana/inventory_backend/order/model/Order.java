@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,7 +23,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)  
     @JoinColumn(name = "user_id")
     private AppUser user;
 
@@ -35,13 +36,13 @@ public class Order {
     @Enumerated(EnumType.STRING) 
     private OrderStatus status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true) 
     @JsonManagedReference
-    private List<OrderItem> items;
+    @Builder.Default  // Prevents null list in builder
+    private List<OrderItem> items = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         if (orderDate == null) orderDate = LocalDateTime.now();
-        
     }
 }

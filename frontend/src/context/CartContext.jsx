@@ -5,21 +5,28 @@ const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
+  // 1. Initialize Cart from LocalStorage
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('cart');
     return saved ? JSON.parse(saved) : [];
   });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { showToast } = useToast();
+  
+  // Safe toast usage (in case context is missing)
+  const toast = useToast();
+  const showToast = toast ? toast.showToast : () => {};
 
+  // 2. Persist to LocalStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
+  // --- ACTIONS ---
+
   const addToCart = (product) => {
     setCart((prev) => {
-      // 1. Normalize the variant. If none selected, assume "Standard"
+      // Normalize the variant. If none selected, assume "Standard"
       const variantName = product.selectedVariant?.colorName || "Standard"; 
       
       const existing = prev.find(item => {
@@ -37,7 +44,7 @@ export const CartProvider = ({ children }) => {
         });
       }
       
-      // 2. Prepare item for cart with safe defaults
+      // Prepare item for cart with safe defaults
       const itemToAdd = {
           ...product,
           selectedVariant: product.selectedVariant || { 
@@ -49,24 +56,33 @@ export const CartProvider = ({ children }) => {
       
       return [...prev, { ...itemToAdd, quantity: product.quantity || 1 }];
     });
-    showToast(product);
+    if(showToast) showToast(product);
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter(item => item.id !== productId));
+  // Removes specific variant, not just ID
+  const removeFromCart = (productId, variantName = "Standard") => {
+    setCart((prev) => prev.filter(item => {
+        const itemVariant = item.selectedVariant?.colorName || "Standard";
+        // Keep item if ID matches BUT variant is different, OR if ID doesn't match
+        return !(item.id === productId && itemVariant === variantName);
+    }));
   };
   
   const updateQuantity = (id, variantName, amount) => {
     setCart(prev => prev.map(item => 
-        (item.id === id && item.selectedVariant?.colorName === variantName) 
+        (item.id === id && (item.selectedVariant?.colorName || "Standard") === (variantName || "Standard")) 
         ? { ...item, quantity: Math.max(1, amount) } 
         : item
     ));
   };
 
+  
   const updateItemVariant = (itemId, oldVariant, newVariantObj) => {
     setCart(prev => prev.map(item => {
-        if (item.id === itemId && item.selectedVariant?.colorName === oldVariant.colorName) {
+        const currentVarName = item.selectedVariant?.colorName || "Standard";
+        const oldVarName = oldVariant?.colorName || "Standard";
+
+        if (item.id === itemId && currentVarName === oldVarName) {
             return { ...item, selectedVariant: newVariantObj };
         }
         return item;
@@ -88,10 +104,11 @@ export const CartProvider = ({ children }) => {
         addToCart, 
         removeFromCart, 
         updateQuantity, 
+        updateItemVariant, 
         isCartOpen, 
         setIsCartOpen,
-        clearCart, // <--- YOU MISSED THIS
-        total      // <--- AND THIS
+        clearCart, 
+        total
     }}>
       {children}
     </CartContext.Provider>
