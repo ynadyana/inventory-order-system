@@ -195,7 +195,7 @@ const ProductDetails = () => {
                </button>
             </div>
 
-            {/* Accordion (Content Preserved Exactly as Requested) */}
+            {/*Content Preserved Exactly as Requested*/}
             <div className="border-t border-gray-100 pt-2">
               <AccordionItem id="info" icon={Info} title="Product Description">
                   <p className="text-gray-600 leading-7">

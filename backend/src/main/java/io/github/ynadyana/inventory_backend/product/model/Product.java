@@ -2,21 +2,21 @@ package io.github.ynadyana.inventory_backend.product.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Table(name = "products")
 public class Product {
 
     @Id
@@ -28,36 +28,39 @@ public class Product {
 
     @Column(nullable = false)
     private String name;
-
+    
     @Column(length = 1000)
     private String description;
     
     private String category;
-
-    private String imageUrl;
-
+    
     @Column(nullable = false)
     private BigDecimal price;
-
+    
+    private String imageUrl;
+    
     private boolean active;
+    private String brand;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
+    @Builder.Default
     private List<ProductVariant> variants = new ArrayList<>();
 
-    // Calculated Getter for total stock
-    @Transient 
-    public Integer getTotalStock() {
-        if (variants == null || variants.isEmpty()) {
-            return 0; 
-        }
-        return variants.stream().mapToInt(v -> v.getStock() == null ? 0 : v.getStock()).sum();
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    @CreationTimestamp
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    private Instant updatedAt;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

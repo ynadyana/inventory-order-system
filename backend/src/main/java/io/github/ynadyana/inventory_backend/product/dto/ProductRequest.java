@@ -3,14 +3,13 @@ package io.github.ynadyana.inventory_backend.product.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data; // <--- This is crucial
+import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-@Data // <--- Ensures getters like getSku(), getName() exist
+@Data
 public class ProductRequest {
 
-    @NotBlank(message = "SKU is required")
     private String sku;
 
     @NotBlank(message = "Name is required")
@@ -25,6 +24,10 @@ public class ProductRequest {
     @DecimalMin(value = "0.01", message = "Price must be greater than zero")
     private BigDecimal price;
 
+    
+    private Integer stock; 
+    private String brand;
+
     private String imageUrl;
 
     private List<VariantDto> variants;
@@ -35,5 +38,9 @@ public class ProductRequest {
         private String colorHex;
         private Integer stock;
         private String imageUrl;
+        private String storage;
+        private BigDecimal price;
+        private String sku;
+        private String brand;
     }
 }

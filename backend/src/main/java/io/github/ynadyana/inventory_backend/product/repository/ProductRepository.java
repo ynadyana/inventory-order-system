@@ -27,4 +27,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // 5. For Customers: Just get list (Active only)
     Page<Product> findByActiveTrue(Pageable pageable);
+
+    // 6. For Staff: Filter by Brand (All)
+    Page<Product> findByBrand(String brand, Pageable pageable);
+
+    // 7. For Customers: Filter by Brand AND Active
+    Page<Product> findByBrandAndActiveTrue(String brand, Pageable pageable);
 }
