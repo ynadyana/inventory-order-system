@@ -144,7 +144,7 @@ const ManageOrders = () => {
             <aside className="w-64 bg-white flex flex-col flex-shrink-0 border-r border-slate-200 z-20 h-full shadow-[2px_0_20px_rgba(0,0,0,0.02)]">
                 <div className="p-6 flex-shrink-0 flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white"><LayoutDashboard className="w-5 h-5" /></div>
-                    <div><h1 className="text-lg font-bold text-slate-900 leading-tight">TechVault</h1><p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Admin Workspace</p></div>
+                    <div><h1 className="text-lg font-bold text-slate-900 leading-tight">TechVault</h1><p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">Staff Workspace</p></div>
                 </div>
                 <nav className="flex-1 px-4 space-y-1 overflow-y-auto mt-2">
                     <div className="text-[11px] font-bold text-slate-400 uppercase px-4 mb-2 tracking-wider">Main Menu</div>
@@ -208,7 +208,7 @@ const ManageOrders = () => {
 
                     <div className="flex items-center gap-5">
                         <div className="flex items-center gap-3">
-                            <div className="text-right hidden md:block"><p className="text-sm font-semibold text-slate-700 leading-none">Admin User</p><p className="text-xs text-slate-500 mt-1">Super Admin</p></div>
+                            <div className="text-right hidden md:block"><p className="text-sm font-semibold text-slate-700 leading-none">Staff User</p><p className="text-xs text-slate-500 mt-1">Staff</p></div>
                             <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold border border-blue-200"><User className="w-4 h-4" /></div>
                         </div>
                     </div>
