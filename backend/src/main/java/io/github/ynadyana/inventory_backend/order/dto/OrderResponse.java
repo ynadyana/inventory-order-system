@@ -13,7 +13,8 @@ import java.util.List;
 public class OrderResponse {
     private Long id;
     private Long userId;        // Return ID instead of full User object
-    private String userEmail;   // Return Email for reference
+    private String userEmail; 
+    private String username;  
     private BigDecimal totalAmount;
     private LocalDateTime orderDate;
     private String shippingMethod;

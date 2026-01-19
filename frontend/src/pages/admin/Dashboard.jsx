@@ -248,7 +248,7 @@ const Dashboard = () => {
                                                     {style.icon}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-slate-800">Order #{order.id} <span className="font-normal text-slate-500">placed by</span> {order.user?.username || "Guest"}</p>
+                                                    <p className="text-sm font-bold text-slate-800">Order #{order.id} <span className="font-normal text-slate-500">placed by</span> {order.username || order.userEmail || "Guest"}</p>
                                                     <p className="text-xs text-slate-500 flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(order.orderDate).toLocaleString()}</p>
                                                 </div>
                                             </div>

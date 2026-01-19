@@ -114,6 +114,7 @@ public class OrderService {
                 .id(order.getId())
                 .userId(order.getUser().getId()) 
                 .userEmail(order.getUser().getEmail()) 
+                .username(order.getUser().getRealUsername())
                 .totalAmount(order.getTotalAmount())
                 .orderDate(order.getOrderDate())
                 .shippingMethod(order.getShippingMethod())
