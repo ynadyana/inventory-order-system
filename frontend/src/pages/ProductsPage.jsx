@@ -136,8 +136,15 @@ const ProductsPage = () => {
                 {/* --- 3. PRODUCT DISPLAY --- */}
                 {activeProducts.length > 0 ? (
                     <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" : "space-y-4"}>
-                        {activeProducts.map(p => (
-                            viewMode === 'grid' ? (
+                        {activeProducts.map(p => {
+                            
+                            // Check if variants exist and sum their stock. If no variants, use base stock.
+                            const hasVariants = p.variants && p.variants.length > 0;
+                            const totalStock = hasVariants 
+                                ? p.variants.reduce((sum, v) => sum + (v.stock || 0), 0) 
+                                : (p.stock || 0);
+
+                            return viewMode === 'grid' ? (
                                 // --- GRID VIEW ---
                                 <ProductCard 
                                     key={p.id} 
@@ -149,7 +156,8 @@ const ProductsPage = () => {
                                 <div key={p.id} className="group flex flex-col md:flex-row items-center bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:border-blue-200">
                                     <div className="w-full md:w-48 h-48 md:h-32 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={() => setSelectedProduct(p)}>
                                         {getImageUrl(p.imageUrl) ? <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="flex items-center justify-center h-full text-slate-300"><Package className="w-8 h-8" /></div>}
-                                        {p.stock <= 0 && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">Out of Stock</span></div>}
+                                        
+                                        {totalStock <= 0 && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full">Out of Stock</span></div>}
                                     </div>
 
                                     <div className="flex-1 px-6 py-4 md:py-0 w-full text-center md:text-left">
@@ -164,7 +172,8 @@ const ProductsPage = () => {
 
                                     <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-3 px-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0">
                                         <div className="text-2xl font-extrabold text-slate-900">RM {p.price?.toLocaleString()}</div>
-                                        {p.stock > 0 ? (
+                                        
+                                        {totalStock > 0 ? (
                                             <button 
                                                 onClick={() => setSelectedProduct(p)} 
                                                 className="flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg shadow-slate-900/10 hover:shadow-blue-600/20 active:scale-95 w-full md:w-auto justify-center"
@@ -177,8 +186,8 @@ const ProductsPage = () => {
                                         <button onClick={() => setSelectedProduct(p)} className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1">View Details <ArrowRight className="w-3 h-3" /></button>
                                     </div>
                                 </div>
-                            )
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
