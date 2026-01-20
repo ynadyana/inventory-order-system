@@ -29,7 +29,7 @@ const MALAYSIA_STATES = [
 ];
 
 const Checkout = () => {
-  const { cart, total, clearCart } = useCart();
+  const { cart, clearCart } = useCart(); 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [tokenTimeLeft, setTokenTimeLeft] = useState(null);
@@ -54,9 +54,15 @@ const Checkout = () => {
 
   const TECHVAULT_ADDRESS = "No. 12, Jalan Teknologi 3/5, Kota Damansara, 47810 Petaling Jaya, Selangor";
 
-  const discountAmount = total >= 500 ? 50 : 0;
+  // Calculate Subtotal - Ensure we use the VARIANT price if it exists
+  const cartSubtotal = cart.reduce((acc, item) => {
+      const itemPrice = item.selectedVariant?.price || item.price;
+      return acc + (itemPrice * item.quantity);
+  }, 0);
+
+  const discountAmount = cartSubtotal >= 500 ? 50 : 0;
   const deliveryFee = shippingMethod === 'delivery' ? 10 : 0;
-  const finalTotal = total + deliveryFee - discountAmount;
+  const finalTotal = cartSubtotal + deliveryFee - discountAmount;
 
   useEffect(() => {
     const checkTokenValidity = () => {
@@ -114,26 +120,43 @@ const Checkout = () => {
             totalAmount: finalTotal,
             shippingMethod: shippingMethod.toUpperCase(),
             shippingAddress: finalAddress,
-            items: cart.map(item => ({
-                productId: item.id,
-                quantity: item.quantity || 1,
-                price: item.price,
-                variantName: item.selectedVariant?.colorName || "Standard"
-            }))
+            items: cart.map(item => {
+               
+                
+                let backendVariantString = "Standard";
+                
+                if (item.selectedVariant) {
+                    const parts = [];
+                    if (item.selectedVariant.colorName && item.selectedVariant.colorName !== 'Standard') {
+                        parts.push(item.selectedVariant.colorName);
+                    }
+                    if (item.selectedVariant.storage && item.selectedVariant.storage !== 'Standard') {
+                        parts.push(item.selectedVariant.storage);
+                    }
+                    
+                    if (parts.length > 0) {
+                        backendVariantString = parts.join(' - '); 
+                    }
+                }
+
+                return {
+                    productId: item.id,
+                    quantity: item.quantity || 1,
+                    price: item.selectedVariant?.price || item.price,
+                    variantName: backendVariantString 
+                };
+            })
         };
 
         const response = await api.post('/orders', orderRequest);
         
-        // --- FIXED: Get Username from Storage ---
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
         const loggedInUsername = storedUser.username || storedUser.email?.split('@')[0];
 
-        // Determine Name: Use Form Name if Delivery, otherwise use Account Username
         const receiptName = (shippingMethod === 'delivery' && address.firstName) 
             ? `${address.firstName} ${address.lastName}` 
             : (loggedInUsername || "Valued Customer");
 
-        // Determine Phone: Use Form Phone if Delivery, otherwise use Account Email
         const receiptContact = address.phone || (storedUser.email || "-");
 
         setFinalOrderData({
@@ -144,13 +167,21 @@ const Checkout = () => {
             shippingAddress: finalAddress,
             customerName: receiptName,
             customerContact: receiptContact,
-            items: cart.map(item => ({
-                name: item.name,
-                quantity: item.quantity || 1,
-                price: item.price,
-                imageUrl: item.selectedVariant?.imageUrl || item.imageUrl,
-                variantName: item.selectedVariant?.colorName || "Standard"
-            }))
+            items: cart.map(item => {
+                
+                const vParts = [];
+                if (item.selectedVariant?.colorName && item.selectedVariant.colorName !== 'Standard') vParts.push(item.selectedVariant.colorName);
+                if (item.selectedVariant?.storage && item.selectedVariant.storage !== 'Standard') vParts.push(item.selectedVariant.storage);
+                const displayVariantString = vParts.length > 0 ? vParts.join(' | ') : "Standard";
+
+                return {
+                    name: item.name,
+                    quantity: item.quantity || 1,
+                    price: item.selectedVariant?.price || item.price,
+                    imageUrl: item.selectedVariant?.imageUrl || item.imageUrl,
+                    variantName: displayVariantString
+                };
+            })
         });
 
         clearCart();
@@ -163,7 +194,7 @@ const Checkout = () => {
         if (error.response && (error.response.status === 403 || error.response.status === 401)) {
             setShowBankModal(false); setShowTngModal(false); setShowSessionExpired(true);
         } else {
-            alert("Payment failed. Please try again.");
+            alert(`Payment failed: ${error.response?.data?.message || "Please try again."}`);
         }
       } finally {
         setLoading(false);
@@ -249,22 +280,32 @@ const Checkout = () => {
                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 sticky top-24">
                    <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Order Summary</h3>
                    <div className="space-y-6 mb-6 max-h-[400px] overflow-y-auto px-2 pt-4 custom-scrollbar">
-                       {cart.map((item, index) => (
-                           <div key={`${item.id}-${index}`} className="flex gap-4">
-                               <div className="relative w-20 h-20 bg-gray-50 rounded-lg border border-gray-100 flex-shrink-0">
-                                   <img src={getImageUrl(item.selectedVariant?.imageUrl || item.imageUrl)} className="w-full h-full object-contain mix-blend-multiply p-2" />
-                                   <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{item.quantity}</span>
+                       {cart.map((item, index) => {
+                           const currentPrice = item.selectedVariant?.price || item.price;
+                           
+                           // Display Logic for UI Summary
+                           const vParts = [];
+                           if(item.selectedVariant?.colorName && item.selectedVariant.colorName !== 'Standard') vParts.push(item.selectedVariant.colorName);
+                           if(item.selectedVariant?.storage && item.selectedVariant.storage !== 'Standard') vParts.push(item.selectedVariant.storage);
+                           const variantLabel = vParts.length > 0 ? vParts.join(' | ') : "Standard";
+
+                           return (
+                               <div key={`${item.id}-${index}`} className="flex gap-4">
+                                   <div className="relative w-20 h-20 bg-gray-50 rounded-lg border border-gray-100 flex-shrink-0">
+                                       <img src={getImageUrl(item.selectedVariant?.imageUrl || item.imageUrl)} className="w-full h-full object-contain mix-blend-multiply p-2" />
+                                       <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{item.quantity}</span>
+                                   </div>
+                                   <div className="flex-1">
+                                       <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug">{item.name}</h4>
+                                       <p className="text-xs text-gray-500 mt-1 font-medium">{variantLabel}</p>
+                                       <p className="text-sm font-bold text-gray-900 text-right mt-1">RM {(currentPrice * item.quantity).toLocaleString()}</p>
+                                   </div>
                                </div>
-                               <div className="flex-1">
-                                   <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug">{item.name}</h4>
-                                   {item.selectedVariant && <p className="text-xs text-gray-500 mt-1">{item.selectedVariant.colorName}</p>}
-                                   <p className="text-sm font-bold text-gray-900 text-right mt-1">RM {(item.price * item.quantity).toLocaleString()}</p>
-                               </div>
-                           </div>
-                       ))}
+                           );
+                       })}
                    </div>
                    <div className="border-t border-gray-100 pt-4 space-y-3 text-sm">
-                       <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>RM {total.toLocaleString()}</span></div>
+                       <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>RM {cartSubtotal.toLocaleString()}</span></div>
                        {discountAmount > 0 && <div className="flex justify-between text-green-600 animate-pulse"><span className="flex items-center gap-1 font-bold"><Sparkles className="w-3 h-3" /> Spring Sale Discount</span><span className="font-bold">-RM {discountAmount}</span></div>}
                        <div className="flex justify-between text-gray-500"><span>Delivery</span><span className="font-medium text-gray-900">{shippingMethod === 'delivery' ? 'RM 10' : 'Free'}</span></div>
                        <div className="flex justify-between text-xl font-bold text-gray-900 mt-4 pt-4 border-t border-dashed border-gray-200"><span>Total</span><span>RM {finalTotal.toLocaleString()}</span></div>
@@ -304,8 +345,6 @@ const Checkout = () => {
        {/* --- NEW PROFESSIONAL INVOICE DESIGN --- */}
        {showReceipt && finalOrderData && (
         <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-300">
-            
-            {/* PRINT CSS FIX: Collapses background page to 0 height */}
             <style>
             {`
                 @media print {

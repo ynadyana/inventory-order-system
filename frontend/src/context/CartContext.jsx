@@ -12,91 +12,77 @@ export const CartProvider = ({ children }) => {
   });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
-  
-  // Safe toast usage (in case context is missing)
   const toast = useToast();
   const showToast = toast ? toast.showToast : () => {};
 
-  // 2. Persist to LocalStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  // --- HELPER: Generate Unique ID ---
+  const generateCartItemId = (product, variant) => {
+    const varId = variant?.id || 'std';
+    const color = variant?.colorName || 'no-color';
+    const storage = variant?.storage || 'no-storage';
+    // Create a unique string like "101-25-Midnight-512GB"
+    return `${product.id}-${varId}-${color}-${storage}`; 
+  };
 
   // --- ACTIONS ---
 
   const addToCart = (product) => {
     setCart((prev) => {
-      // Normalize the variant. If none selected, assume "Standard"
-      const variantName = product.selectedVariant?.colorName || "Standard"; 
-      
-      const existing = prev.find(item => {
-         const itemVariant = item.selectedVariant?.colorName || "Standard";
-         return item.id === product.id && itemVariant === variantName;
-      });
+      const selectedVar = product.selectedVariant || { colorName: "Standard" };
+      const uniqueId = generateCartItemId(product, selectedVar);
 
-      if (existing) {
-        return prev.map(item => {
-          const itemVariant = item.selectedVariant?.colorName || "Standard";
-          if (item.id === product.id && itemVariant === variantName) {
-             return { ...item, quantity: item.quantity + (product.quantity || 1) };
-          }
-          return item;
-        });
+      // Check if this EXACT variant is already in cart using the unique ID
+      const existingItem = prev.find(item => item.cartItemId === uniqueId);
+
+      if (existingItem) {
+        return prev.map(item => 
+          item.cartItemId === uniqueId 
+            ? { ...item, quantity: item.quantity + (product.quantity || 1) } 
+            : item
+        );
       }
       
-      // Prepare item for cart with safe defaults
+      // New Item
       const itemToAdd = {
           ...product,
-          selectedVariant: product.selectedVariant || { 
-              colorName: "Standard", 
-              imageUrl: product.imageUrl,
-              stock: product.totalStock // fallback
-          }
+          cartItemId: uniqueId, 
+          selectedVariant: selectedVar
       };
       
       return [...prev, { ...itemToAdd, quantity: product.quantity || 1 }];
     });
+    
     if(showToast) showToast(product);
   };
 
-  // Removes specific variant, not just ID
-  const removeFromCart = (productId, variantName = "Standard") => {
-    setCart((prev) => prev.filter(item => {
-        const itemVariant = item.selectedVariant?.colorName || "Standard";
-        // Keep item if ID matches BUT variant is different, OR if ID doesn't match
-        return !(item.id === productId && itemVariant === variantName);
-    }));
+ 
+  const removeFromCart = (cartItemId) => {
+    setCart((prev) => prev.filter(item => item.cartItemId !== cartItemId));
   };
   
-  const updateQuantity = (id, variantName, amount) => {
+ 
+  const updateQuantity = (cartItemId, amount) => {
     setCart(prev => prev.map(item => 
-        (item.id === id && (item.selectedVariant?.colorName || "Standard") === (variantName || "Standard")) 
+        item.cartItemId === cartItemId 
         ? { ...item, quantity: Math.max(1, amount) } 
         : item
     ));
   };
 
-  
-  const updateItemVariant = (itemId, oldVariant, newVariantObj) => {
-    setCart(prev => prev.map(item => {
-        const currentVarName = item.selectedVariant?.colorName || "Standard";
-        const oldVarName = oldVariant?.colorName || "Standard";
-
-        if (item.id === itemId && currentVarName === oldVarName) {
-            return { ...item, selectedVariant: newVariantObj };
-        }
-        return item;
-    }));
-  };
-
-  // Clear cart after payment
   const clearCart = () => {
     setCart([]);
     localStorage.removeItem('cart');
   };
 
-  // Calculate total automatically
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Total Calculation use Variant Price
+  const total = cart.reduce((sum, item) => {
+      const price = item.selectedVariant?.price || item.price;
+      return sum + (price * item.quantity);
+  }, 0);
 
   return (
     <CartContext.Provider value={{ 
@@ -104,7 +90,6 @@ export const CartProvider = ({ children }) => {
         addToCart, 
         removeFromCart, 
         updateQuantity, 
-        updateItemVariant, 
         isCartOpen, 
         setIsCartOpen,
         clearCart, 
