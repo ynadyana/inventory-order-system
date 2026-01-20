@@ -4,6 +4,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ![REST API](https://img.shields.io/badge/REST_API-005571?style=for-the-badge&logo=postman&logoColor=white)
 
@@ -49,6 +50,7 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 | **Backend Architecture** | **RESTful API**, Java 17, Spring Boot 3, Spring Security 6 |
 | **Frontend** | React.js (Vite), Tailwind CSS, Lucide React (Icons), Axios |
 | **Data & Storage** | PostgreSQL, Hibernate/JPA, Relational Database Design |
+| **Deployment & DevOps** | **Docker**, Docker Compose |
 | **Authentication** | JWT (Stateless), BCrypt Password Encoding |
 | **State Management** | React Context API (Cart & Auth Management) |
 
