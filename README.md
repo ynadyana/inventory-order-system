@@ -1,4 +1,4 @@
-# 🛡️ TechVault | Enterprise Inventory & E-Commerce System
+# 🛡️ TechVault | Enterprise Inventory & E-Commerce Ecosystem
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
@@ -7,84 +7,84 @@
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-> **A full-stack, robust solution bridging the gap between complex backend inventory management and a modern, responsive customer e-commerce storefront.**
+> **A robust full-stack solution bridging the gap between complex backend inventory management and a modern, responsive customer e-commerce storefront.**
 
 ---
 
-## 📖 Project Overview
+## 📖 Executive Summary
 
-**TechVault** is a comprehensive application designed to simulate a real-world electronics retail ecosystem. It solves two distinct problems: **Inventory Control** for administrators and **Seamless Shopping** for customers.
+**TechVault** is not just a web store; it is a complete retail ecosystem simulation. It solves two distinct business problems: **Granular Inventory Control** for administrators and **Seamless UX** for customers.
 
-Built with a **Spring Boot** backend and **React** frontend, this project demonstrates proficiency in handling complex data relationships (dynamic product variants), secure authentication flows, and state management.
-
----
-
-## 🚀 Key Technical Features
-
-### 🔐 Security & Authentication
-* **JWT Authentication:** Stateless, secure authentication using JSON Web Tokens.
-* **RBAC (Role-Based Access Control):** distinct access levels for `ADMIN`, `STAFF`, and `CUSTOMER`.
-* **Protected Routes:** React Router guards ensure users cannot access unauthorized pages.
-
-### 📦 Advanced Inventory Management
-* **Dynamic Variants:** Support for multi-dimensional product attributes (e.g., *Color* + *Storage*).
-* **Smart Stock Deduction:** Logic to deduct stock from specific SKU variants upon checkout, not just the generic product.
-* **Status Tracking:** Real-time order status updates (Pending → Shipped → Completed).
-
-### 🛒 E-Commerce Experience
-* **Persistent Cart:** Cart state management using React Context API.
-* **Checkout Simulation:** Integrated payment gateway UI simulation (Card & FPX) with form validation.
-* **Invoice Generation:** Auto-generated, printable digital receipts upon successful order placement.
+Built with a **Spring Boot** backend and **React** frontend, this project demonstrates advanced proficiency in handling complex data relationships (specifically multi-dimensional product variants), secure stateless authentication, and real-time stock management.
 
 ---
 
-## 📸 Visual Showcase
+## 🚀 Technical Highlights (Why this project matters)
 
-### 1. User Experience (Storefront)
-*A modern, responsive shopping experience with filtering, sorting, and dynamic interactions.*
+### 🔐 1. Advanced Security & RBAC
+* **JWT Implementation:** Custom security filter chain implementing stateless authentication using JSON Web Tokens.
+* **Role-Based Access Control (RBAC):** Distinct interface rendering and API endpoint protection for `ADMIN` vs `CUSTOMER`.
+* **Protected Routes:** React Higher-Order Components (HOC) prevent unauthorized access to dashboard views.
+
+### 📦 2. Complex Data Modeling (Dynamic Variants)
+* **The Challenge:** Handling products like the "MacBook Air" which have multiple dimensions (Color + Storage) where each combination has a unique stock level and price.
+* **The Solution:** Implemented a relational database schema mapping `Products` to `ProductVariants`.
+* **Logic:** The checkout engine intelligently parses composite variant strings (e.g., "Midnight - 512GB") to deduct stock from the specific SKU, preventing overselling of specific configurations.
+
+### 💳 3. End-to-End Order Processing
+* **Transaction Management:** Atomic transactions ensure inventory integrity during checkout.
+* **Invoice Generation:** System auto-generates a detailed, printable digital receipt upon successful payment simulation.
+* **Lifecycle Tracking:** Admin capability to track orders from `PENDING` → `SHIPPED` → `COMPLETED`.
+
+---
+
+## 📸 System Visuals
+
+### 🛍️ Customer Experience
+*A clean, responsive UI focused on conversion and ease of use.*
 
 <table width="100%">
   <tr>
-    <th width="50%">Secure Login & Registration</th>
-    <th width="50%">Product Catalog & Filtering</th>
+    <th width="50%">Modern Authentication</th>
+    <th width="50%">Storefront & Filtering</th>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/customer/login-page.png" width="100%" alt="Login Page"></td>
-    <td><img src="assets/screenshots/customer/products-page/grid-view.png" width="100%" alt="Product Catalog"></td>
+    <td><img src="assets/screenshots/image_5a0bb4.jpg" width="100%" alt="Login Page"></td>
+    <td><img src="assets/screenshots/image_5a83d2.png" width="100%" alt="Product Catalog"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><strong>Dynamic Product Details (Color/Storage Selection)</strong></td>
+    <th colspan="2">Complex Variant Selection (Color + Storage Logic)</th>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/screenshots/customer/quick-view.png" width="100%" alt="Quick View Modal"></td>
+    <td colspan="2" align="center"><img src="assets/screenshots/image_5afbee.jpg" width="80%" alt="Quick View Modal"></td>
   </tr>
 </table>
 
-### 2. The Checkout Flow
-*A seamless transition from cart to payment to invoice.*
+### 🧾 The Checkout Flow
+*Secure form handling and dynamic invoice generation.*
 
 <table width="100%">
   <tr>
-    <th width="50%">Secure Checkout Form</th>
-    <th width="50%">Generated Digital Invoice</th>
+    <th width="50%">Order Summary & Validation</th>
+    <th width="50%">Digital Invoice Generation</th>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/customer/checkout-page.png" width="100%" alt="Checkout"></td>
-    <td><img src="assets/screenshots/customer/receipt.png" width="100%" alt="Invoice"></td>
+    <td><img src="assets/screenshots/image_5a2237.jpg" width="100%" alt="Register/Checkout"></td>
+    <td><img src="assets/screenshots/image_4f9b63.png" width="100%" alt="Invoice Receipt"></td>
   </tr>
 </table>
 
-### 3. Admin Workspace
-*Powerful tools for staff to manage stock levels and process orders.*
+### ⚙️ Admin Workspace
+*Powerful tools for granular stock management.*
 
 <table width="100%">
   <tr>
-    <th width="50%">Dashboard Overview</th>
     <th width="50%">Product & Variant Management</th>
+    <th width="50%">Order Status Control</th>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/admin/dashboard-overview-page.png" width="100%" alt="Admin Dashboard"></td>
-    <td><img src="assets/screenshots/admin/product-management-page.png" width="100%" alt="Product Management"></td>
+    <td><img src="assets/screenshots/image_4f9b68.png" width="100%" alt="Product Management"></td>
+    <td><img src="assets/screenshots/image_4eba81.png" width="100%" alt="Order Management"></td>
   </tr>
 </table>
 
@@ -92,30 +92,18 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 
 ## 🛠️ Technology Stack
 
-### Backend (Java)
-* **Framework:** Spring Boot 3.x
-* **Security:** Spring Security 6, JWT (JJWT)
-* **Data:** Spring Data JPA, Hibernate
-* **Database:** PostgreSQL
-* **API:** RESTful endpoints with DTO mapping
-
-### Frontend (JavaScript)
-* **Library:** React 18 (Vite)
-* **Styling:** Tailwind CSS
-* **State Management:** React Context API (Cart/Auth)
-* **HTTP Client:** Axios with Interceptors (Auto-attach Tokens)
-* **Icons:** Lucide React
+| Domain | Technologies Used |
+| :--- | :--- |
+| **Backend** | Java 17, Spring Boot 3, Spring Security 6, Hibernate/JPA |
+| **Frontend** | React.js (Vite), Tailwind CSS, Lucide React (Icons), Axios |
+| **Database** | PostgreSQL (Relational Data Integrity) |
+| **State** | React Context API (Cart & Auth Management) |
+| **Tools** | Git, Maven, Postman |
 
 ---
 
-## ⚙️ Installation & Setup
+## 📬 Author
 
-### Prerequisites
-* Java JDK 17+
-* Node.js & npm
-* PostgreSQL
+**[Your Name]** *Full Stack Developer | Java & React Enthusiast* Currently seeking opportunities to leverage these skills in a professional environment.
 
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/ynadyana/inventory-order-system.git](https://github.com/ynadyana/inventory-order-system.git)
-cd inventory-order-system
+[LinkedIn](#) | [Email](mailto:your.email@example.com)
