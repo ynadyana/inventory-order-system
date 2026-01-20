@@ -11,7 +11,7 @@ const ManageOrders = () => {
     const navigate = useNavigate();
 
     const [orders, setOrders] = useState([]);
-    const [products, setProducts] = useState({}); // Store products map
+    const [products, setProducts] = useState({}); 
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalRevenue: 0, pendingCount: 0, todaysOrders: 0 });
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -318,6 +318,21 @@ const ManageOrders = () => {
                                     {selectedOrder.items.map((item, index) => {
                                         // Lookup Product for Image/Category details
                                         const product = products[item.productId] || {};
+                                        
+                                        // DISPLAY FULL VARIANT DETAILS ---
+                                        const variantStr = item.variantName || product.category || "Standard";
+                                        let displayVariant = <span className="font-medium text-slate-700">{variantStr}</span>;
+
+                                        // If string contains " - ", split it into "Color | Storage"
+                                        if (variantStr && variantStr.includes(' - ')) {
+                                            const [color, storage] = variantStr.split(' - ');
+                                            displayVariant = (
+                                                <span className="font-medium text-slate-700">
+                                                    {color} <span className="text-slate-300 mx-1">|</span> {storage}
+                                                </span>
+                                            );
+                                        }
+
                                         return (
                                             <div key={index} className="flex gap-4 p-5 items-center hover:bg-slate-50/50 transition">
                                                 <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -325,7 +340,9 @@ const ManageOrders = () => {
                                                 </div>
                                                 <div className="flex-1">
                                                     <h5 className="font-bold text-slate-800 text-sm">{item.productName || `Product ID: ${item.productId}`}</h5>
-                                                    <p className="text-xs text-slate-500 mt-0.5">{product.category || item.variantName || "General Item"}</p>
+                                                    <div className="text-xs text-slate-500 mt-0.5 flex items-center">
+                                                        Variant: <span className="ml-1">{displayVariant}</span>
+                                                    </div>
                                                 </div>
                                                 <div className="text-right"><div className="text-xs text-slate-500 mb-0.5">Qty: <span className="font-bold text-slate-800">{item.quantity}</span></div><div className="font-bold text-blue-600 text-sm">RM {(item.price || 0).toLocaleString()}</div></div>
                                             </div>

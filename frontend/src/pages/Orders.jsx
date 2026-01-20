@@ -173,7 +173,6 @@ const Orders = () => {
                             </div>
                             <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                                 <Calendar className="w-3.5 h-3.5" />
-                                {/* FIX: Using order.orderDate instead of createdAt */}
                                 {new Date(order.orderDate).toLocaleString('en-US', { 
                                     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                                 })}
@@ -191,9 +190,20 @@ const Orders = () => {
                 <div className="p-5 space-y-6">
                     {itemsToShow.map((item, index) => {
                         const product = products[item.productId] || {};
-                        // Use Order Item DTO name first (safe), then Product Catalog name
                         const productName = item.productName || product.name || `Product #${item.productId}`;
-                        const productVariant = item.variantName || product.category || "Standard";
+                        
+                        // Parses the "Color - Storage" string
+                        const variantStr = item.variantName || product.category || "Standard";
+                        let displayVariant = <span className="font-medium text-gray-700">{variantStr}</span>;
+
+                        if (variantStr && variantStr.includes(' - ')) {
+                            const [color, storage] = variantStr.split(' - ');
+                            displayVariant = (
+                                <span className="font-medium text-gray-700">
+                                    {color} <span className="text-gray-300 mx-1">|</span> {storage}
+                                </span>
+                            );
+                        }
                         
                         return (
                             <div key={index} className="flex gap-5 group">
@@ -215,9 +225,9 @@ const Orders = () => {
                                     <h4 className="text-base font-bold text-gray-900 line-clamp-1">
                                         {productName}
                                     </h4>
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        Variant: <span className="font-medium text-gray-700">{productVariant}</span>
-                                    </p>
+                                    <div className="text-sm text-gray-500 mt-1 flex items-center">
+                                        Variant: <span className="ml-1">{displayVariant}</span>
+                                    </div>
                                 </div>
                                 
                                 <div className="text-right flex flex-col justify-center">

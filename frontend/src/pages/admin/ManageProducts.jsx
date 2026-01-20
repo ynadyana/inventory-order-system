@@ -1,18 +1,108 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
 import { 
     LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Trash2, Edit, 
     X, Image as ImageIcon, Search, Filter, User, ChevronDown, Layers, 
-    AlertTriangle, CheckCircle, XCircle, Check, ArrowRight, Minus, Upload
+    AlertTriangle, CheckCircle, XCircle, Check, ArrowRight, Minus, Upload, ChevronUp
 } from 'lucide-react';
 
+// --- CREATABLE SELECT (Dropdown + Type New) ---
+const CreatableSelect = ({ label, value, onChange, options, placeholder, required }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(value || '');
+    const wrapperRef = useRef(null);
+
+    // Sync internal input with parent value
+    useEffect(() => {
+        setSearchTerm(value || '');
+    }, [value]);
+
+    // Handle clicking outside to close dropdown
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [wrapperRef]);
+
+    const filteredOptions = options.filter(opt => 
+        opt.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleSelect = (optionValue) => {
+        onChange(optionValue);
+        setSearchTerm(optionValue);
+        setIsOpen(false);
+    };
+
+    const handleInputChange = (e) => {
+        const newValue = e.target.value;
+        setSearchTerm(newValue);
+        onChange(newValue); 
+        setIsOpen(true);
+    };
+
+    return (
+        <div className="relative" ref={wrapperRef}>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wide">
+                {label}
+            </label>
+            <div className="relative">
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                    onFocus={() => setIsOpen(true)}
+                    placeholder={placeholder}
+                    required={required}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                />
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500"
+                >
+                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95">
+                    {filteredOptions.length > 0 ? (
+                        filteredOptions.map((option, idx) => (
+                            <div
+                                key={idx}
+                                onClick={() => handleSelect(option)}
+                                className="px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer flex justify-between items-center"
+                            >
+                                {option}
+                                {value === option && <Check className="w-3 h-3 text-blue-600" />}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-4 py-3 text-xs text-slate-400 italic">
+                            No existing options. "{searchTerm}" will be created.
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- MAIN COMPONENT ---
 const ManageProducts = () => {
     const navigate = useNavigate();
     
     // --- DATA STATE ---
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]); 
+    const [availableBrands, setAvailableBrands] = useState([]); 
     const [loading, setLoading] = useState(true);
     
     // --- FILTER & SEARCH STATE ---
@@ -70,6 +160,11 @@ const ManageProducts = () => {
             const res = await api.get('/products');
             const data = Array.isArray(res.data) ? res.data : (res.data.content || []);
             setProducts(data);
+
+            // Extract unique brands from the fetched products for the dropdown
+            const brands = Array.from(new Set(data.map(p => p.brand).filter(b => b && b.trim() !== '')));
+            setAvailableBrands(brands.sort());
+
         } catch (error) { showNotification('error', "Error fetching products"); } 
         finally { setLoading(false); }
     };
@@ -77,6 +172,7 @@ const ManageProducts = () => {
     const fetchCategories = async () => {
         try {
             const res = await api.get('/products/categories');
+            // Ensure unique categories
             const uniqueCats = Array.from(new Set([...res.data, "Laptop", "Smartphone", "Accessories", "Audio", "GPU"]));
             setCategories(uniqueCats.sort());
         } catch (error) { console.error("Error fetching categories:", error); }
@@ -192,7 +288,7 @@ const ManageProducts = () => {
                 showNotification('success', "New product created successfully!");
             }
             setIsProductModalOpen(false);
-            fetchProducts();
+            fetchProducts(); // This will also re-fetch brands
             fetchCategories(); 
         } catch (error) { showNotification('error', "Failed to save product."); }
         finally { setIsSubmitting(false); }
@@ -540,8 +636,31 @@ const ManageProducts = () => {
                             </div>
                             <form onSubmit={handleProductSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="md:col-span-2"><label className={labelClasses}>Product Name</label><input name="name" value={productForm.name} onChange={handleProductInputChange} className={inputBaseClasses} placeholder="e.g. iPhone 15 Pro" required /></div>
-                                <div><label className={labelClasses}>Brand</label><input name="brand" value={productForm.brand} onChange={handleProductInputChange} className={inputBaseClasses} placeholder="e.g. Apple" required /></div>
-                                <div><label className={labelClasses}>Category</label><input name="category" list="category-options" value={productForm.category} onChange={handleProductInputChange} className={inputBaseClasses} placeholder="Select or Type..." required /><datalist id="category-options">{categories.map((cat, idx) => <option key={idx} value={cat} />)}</datalist></div>
+                                
+                                {/* BRAND INPUT - CREATABLE SELECT */}
+                                <div>
+                                    <CreatableSelect 
+                                        label="Brand" 
+                                        value={productForm.brand} 
+                                        options={availableBrands} 
+                                        onChange={(val) => setProductForm(prev => ({...prev, brand: val}))} 
+                                        placeholder="Select or Type..."
+                                        required
+                                    />
+                                </div>
+
+                                {/* CATEGORY INPUT - CREATABLE SELECT */}
+                                <div>
+                                    <CreatableSelect 
+                                        label="Category" 
+                                        value={productForm.category} 
+                                        options={categories} 
+                                        onChange={(val) => setProductForm(prev => ({...prev, category: val}))} 
+                                        placeholder="Select or Type..."
+                                        required
+                                    />
+                                </div>
+
                                 <div><label className={labelClasses}>Base Price (RM)</label><input type="number" name="price" value={productForm.price} onChange={handleProductInputChange} className={inputBaseClasses} placeholder="0.00" required /></div>
                                 <div className="md:col-span-2"><label className={labelClasses}>Description</label><textarea name="description" value={productForm.description} onChange={handleProductInputChange} className={inputBaseClasses} rows="3" placeholder="Product details..." required /></div>
                                 <div className="md:col-span-2">
