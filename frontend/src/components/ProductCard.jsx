@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ product, onQuickView }) => {
   const navigate = useNavigate(); 
-  const [activeImage, setActiveImage] = useState(null); 
-
+  
   // --- LOGIC: Stock ---
   const stockCount = product.totalStock !== undefined ? product.totalStock : product.stock;
   const isSoldOut = stockCount <= 0;
@@ -31,15 +30,14 @@ const ProductCard = ({ product, onQuickView }) => {
 
   const { originalPrice, percent } = getTargetedDiscount(product.name, product.price);
   const hasDiscount = percent > 0;
-
-  const currentImage = activeImage || product.imageUrl;
   
   const getFullUrl = (path) => {
     if (!path) return "https://via.placeholder.com/300";
     return path.startsWith('http') ? path : `http://localhost:8080/${path}`;
   };
 
-  const variants = product.variants || product.colors || [];
+  // Main Image
+  const currentImage = product.imageUrl;
 
   return (
     <div 
@@ -61,7 +59,7 @@ const ProductCard = ({ product, onQuickView }) => {
         )}
       </div>
 
-      {/* --- IMAGE AREA (Height Reduced via aspect ratio) --- */}
+      {/* --- IMAGE AREA --- */}
       <div className="relative w-full aspect-[10/9] bg-gray-50 overflow-hidden group/image">
         <img 
           src={getFullUrl(currentImage)} 
@@ -82,7 +80,7 @@ const ProductCard = ({ product, onQuickView }) => {
         )}
       </div>
 
-      {/* --- INFO AREA (Padding Reduced) --- */}
+      {/* --- INFO AREA --- */}
       <div className="p-4 flex flex-col flex-1">
         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{product.category || "Gear"}</p>
         
@@ -101,25 +99,6 @@ const ProductCard = ({ product, onQuickView }) => {
                 </span>
             )}
           </div>
-
-          {/* Color Dots */}
-          {variants.length > 0 ? (
-            <div className="flex gap-1.5 mt-3 h-3.5">
-              {variants.slice(0, 5).map((variant, index) => {
-                const colorHex = typeof variant === 'string' ? variant : (variant.colorHex || variant.colorValue || '#000');
-                return (
-                  <div
-                    key={index}
-                    onMouseEnter={() => setActiveImage(variant.imageUrl)}
-                    onMouseLeave={() => setActiveImage(null)}
-                    className="w-3.5 h-3.5 rounded-full border border-gray-300 hover:scale-125 hover:border-gray-500 transition-all shadow-sm"
-                    style={{ backgroundColor: colorHex }}
-                  />
-                );
-              })}
-              {variants.length > 5 && <span className="text-[10px] text-gray-400 leading-none self-center font-medium">+{variants.length - 5}</span>}
-            </div>
-          ) : <div className="h-3.5 mt-3"></div>}
         </div>
       </div>
     </div>

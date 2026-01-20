@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/axios';
 import ProductCard from '../components/ProductCard';
 import QuickView from '../components/QuickView'; 
-import { Loader, ShieldCheck, RefreshCw, Award, ArrowRight, Truck, Zap } from 'lucide-react';
+import { Loader, ShieldCheck, Award, ArrowRight, Truck, Zap } from 'lucide-react';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -13,7 +13,6 @@ const Home = () => {
   useEffect(() => {
     api.get('/products')
       .then(res => {
-
         const data = Array.isArray(res.data) ? res.data : (res.data.content || []);
         setProducts(data);
       })
@@ -50,12 +49,9 @@ const Home = () => {
             Discover the latest gaming gear, high-performance laptops, and premium accessories. Official warranty included.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/search" className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30 text-center">
+            <Link to="/products" className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30 text-center">
               Shop Now
             </Link>
-            <button className="px-8 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold rounded-xl border border-white/20 transition">
-              View Promotions
-            </button>
           </div>
         </div>
       </div>
@@ -80,14 +76,10 @@ const Home = () => {
       <div>
         <div className="flex justify-between items-end mb-8">
           <h2 className="text-2xl font-bold text-slate-900">Featured Brands</h2>
-          <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
-            View All <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </a>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {brands.map((brand, idx) => (
             <div key={idx} className="group h-24 flex items-center justify-center p-6 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-lg transition-all cursor-pointer">
-              {/* Image with grayscale effect */}
               <img 
                 src={brand.logo} 
                 alt={brand.name} 
