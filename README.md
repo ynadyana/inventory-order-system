@@ -108,7 +108,7 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 
 ## 📬 Author
 
-**[Your Name]**
+**[Hani Dayana]**
 <br>
 *Full Stack Developer | Fresh Graduare*
 <br>
