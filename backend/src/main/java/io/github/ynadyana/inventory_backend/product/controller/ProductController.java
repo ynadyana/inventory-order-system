@@ -56,7 +56,7 @@ public class ProductController {
     // --- PROTECTED ENDPOINTS (Staff/Admin Only) ---
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('STAFF')") // Restrict creation to Staff
+    @PreAuthorize("hasRole('STAFF')") // Restrict creation to Staff
     public ResponseEntity<Product> createProduct(
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
@@ -85,20 +85,20 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<Void> deactivateProduct(@PathVariable Long id) {
         productService.deactivateProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('STAFF')")
+    @PreAuthorize("hasRole('STAFF')")
     public ResponseEntity<Product> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(productService.uploadImage(id, file));
     }
