@@ -8,6 +8,9 @@ const QuickView = ({ product, onClose }) => {
 
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [hoveredImage, setHoveredImage] = useState(null);
+  
+  // State for Wishlist toggle
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const variants = product.variants || [];
 
@@ -151,11 +154,15 @@ const QuickView = ({ product, onClose }) => {
 
           <div className="mt-auto space-y-6">
             <div className="flex items-center gap-4">
+              
+              {/* Quantity Selector */}
               <div className={`flex items-center border border-gray-200 rounded-full bg-gray-50 px-4 py-2 ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
                 <button onClick={() => setQty(Math.max(1, qty - 1))} className="text-gray-500 hover:text-black transition"><Minus size={16} /></button>
                 <span className="w-12 text-center font-bold text-gray-900">{qty}</span>
                 <button onClick={() => setQty(Math.min(currentStock, qty + 1))} className="text-gray-500 hover:text-black transition"><Plus size={16} /></button>
               </div>
+
+              {/* Add to Cart Button */}
               <button 
                 disabled={isOutOfStock} 
                 onClick={() => { addToCart({...product, quantity: qty, selectedVariant}); onClose(); }}
@@ -163,6 +170,20 @@ const QuickView = ({ product, onClose }) => {
               >
                 <ShoppingCart size={18} /> {isOutOfStock ? "SOLD OUT" : "ADD TO CART"}
               </button>
+
+              {/* NEW HEART BUTTON (Wishlist) */}
+              <button
+                onClick={() => setIsWishlisted(!isWishlisted)}
+                className={`p-3 rounded-full border transition-all duration-200 group ${
+                  isWishlisted 
+                    ? "bg-red-50 border-red-200 text-red-500" 
+                    : "bg-white border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500"
+                }`}
+                title="Add to Wishlist"
+              >
+                <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} className="transition-transform group-hover:scale-110"/>
+              </button>
+
             </div>
           </div>
         </div>
