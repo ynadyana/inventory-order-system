@@ -89,7 +89,7 @@ const Login = () => {
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Digital World.</span>
                 </h1>
                 <p className="text-slate-300 text-lg max-w-md leading-relaxed">
-                    Your one-stop destination for premium hardware, peripherals and enterprise solutions.
+                    Your one-stop destination for premium hardware, peripherals, and enterprise solutions.
                 </p>
                 {/* Social Proof / Trust */}
                 <div className="flex items-center gap-4 pt-4">
@@ -171,7 +171,6 @@ const Login = () => {
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-semibold text-slate-700">Password</label>
-                        <Link to="/forgot-password" class="text-xs font-bold text-blue-600 hover:text-blue-700">Forgot password?</Link>
                     </div>
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
