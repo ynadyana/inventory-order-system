@@ -34,7 +34,7 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 ### 📦 3. Complex Data Modeling (Dynamic Variants)
 * **The Challenge:** Handling products like the "MacBook Air" which have multiple dimensions (Color + Storage) where each combination has a unique stock level and price.
 * **The Solution:** Implemented a relational database schema mapping `Products` to `ProductVariants`.
-* **Logic:** The checkout engine intelligently parses composite variant strings (e.g., "Midnight - 512GB") to deduct stock from the specific SKU, preventing overselling of specific configurations.
+* **Logic:** The checkout engine intelligently parses composite variant strings (e.g., "Midnight - 512GB") to deduct stock, preventing overselling of specific configurations.
 
 ### 💳 4. End-to-End Order Processing
 * **Transaction Management:** Atomic transactions ensure inventory integrity during checkout.
