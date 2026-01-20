@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios"; 
 import { User, Lock, Mail, Eye, EyeOff, Loader2, CheckCircle, AlertCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import logo from "../assets/logo_remove.png";
+
 
 const Register = () => {
   const navigate = useNavigate();
@@ -80,9 +82,7 @@ const Register = () => {
 
         <div className="relative z-10 w-full h-full flex flex-col justify-between p-16">
             <Link to="/" className="flex items-center gap-3 w-fit group">
-                <div className="bg-blue-600 p-2 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                </div>
+                <img src={logo} alt="TechVault Logo" className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-300" />
                 <span className="text-2xl font-extrabold text-white tracking-tight">TechVault</span>
             </Link>
 
