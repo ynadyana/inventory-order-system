@@ -42,6 +42,18 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 
 ---
 
+## 🛠️ Technology Stack
+
+| Domain | Technologies Used |
+| :--- | :--- |
+| **Backend Architecture** | **RESTful API**, Java 17, Spring Boot 3, Spring Security 6 |
+| **Frontend** | React.js (Vite), Tailwind CSS, Lucide React (Icons), Axios |
+| **Data & Storage** | PostgreSQL, Hibernate/JPA, Relational Database Design |
+| **Authentication** | JWT (Stateless), BCrypt Password Encoding |
+| **State Management** | React Context API (Cart & Auth Management) |
+
+---
+
 ## 📸 System Visuals
 
 ### 🛍️ Customer Experience
@@ -94,23 +106,11 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 
 ---
 
-## 🛠️ Technology Stack
-
-| Domain | Technologies Used |
-| :--- | :--- |
-| **Backend Architecture** | **RESTful API**, Java 17, Spring Boot 3, Spring Security 6 |
-| **Frontend** | React.js (Vite), Tailwind CSS, Lucide React (Icons), Axios |
-| **Data & Storage** | PostgreSQL, Hibernate/JPA, Relational Database Design |
-| **Authentication** | JWT (Stateless), BCrypt Password Encoding |
-| **State Management** | React Context API (Cart & Auth Management) |
-
----
-
 ## 📬 Author
 
 **[Hani Dayana]**
 <br>
-*Full Stack Developer | Fresh Graduare*
+*Full Stack Software Engineer | Fresh Graduate*
 <br>
 
 
