@@ -112,7 +112,7 @@ Built with a **Spring Boot** backend and **React** frontend, this project demons
 
 **[Hani Dayana]**
 <br>
-*Full Stack Software Developer | Fresh Graduate*
+*Full Stack Software Developer | ]Fresh Graduate*
 <br>
 
 
